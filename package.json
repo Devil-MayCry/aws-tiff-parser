@@ -1,0 +1,39 @@
+{
+  "name": "gdal-tiff-sentinel-aws",
+  "version": "0.1.0",
+  "description": "Gago image-browser spliting sentinel origin image (jp2) to tiff",
+  "main": "app.js",
+  "scripts": {
+    "start": "sh ./bin/start_server.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://git.azure.gagogroup.cn/huteng/gdal-tiff-sentinel-aws.git"
+  },
+  "private": true,
+  "author": "Hu Teng",
+  "contributors": [
+    {
+      "name": "Hu Teng",
+      "email": "huteng@gagogroup.com"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "python-shell": "^0.4.0",
+    "cron": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/cron": "^1.2.0",
+    "@types/python-shell": "^0.4.0",
+    "@types/pg": "^6.1.33",
+    "child_process": "^1.0.2",
+    "gulp": "^3.9.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-tslint": "^7.0.1",
+    "gulp-typescript": "^3.0.2",
+    "tslint": "^4.5.1",
+    "typescript": "^2.0.3"
+  }
+}
