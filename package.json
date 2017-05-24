@@ -20,8 +20,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "python-shell": "^0.4.0",
-    "cron": "^1.2.1"
+    "cron": "^1.2.1",
+    "python-shell": "^0.4.0"
   },
   "devDependencies": {
     "@types/cron": "^1.2.0",
