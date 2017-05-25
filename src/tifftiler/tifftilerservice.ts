@@ -29,6 +29,7 @@ export class TiffTilerService {
   static async startTransformImageToTiff(): Promise<void> {
     try {
       let newestImagesPaths: string[] =await TiffTilerService.getAllNewestImagesPaths();
+      console.log(newestImagesPaths);
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       for (let imagePath of newestImagesPaths) {
@@ -66,12 +67,15 @@ export class TiffTilerService {
    */
   static async getAllNewestImagesPaths(): Promise<string[]> {
     let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
+      console.log(allSquareFoldersPathInS3);
     let allSquareNewestImagesFolderPathArray : string[] = await TiffTilerService.getAllSquareNewestImagesFolderPath_(allSquareFoldersPathInS3);
+      console.log(allSquareFoldersPathInS3);
     let allNewestImagesPathArray: string[] = [];
     for (let eachNewestFolder of allSquareNewestImagesFolderPathArray) {
       let files: string [] =  await TiffTilerService.getFolderAllImagePath_(eachNewestFolder);
       allNewestImagesPathArray.push(...files);
     }
+      console.log(allNewestImagesPathArray);
     return allNewestImagesPathArray;
   }
 
@@ -92,10 +96,13 @@ export class TiffTilerService {
 
     let allSquareFoldersPathInS3: string[] = [];
     let utmCodeFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir);
+    console.log(utmCodeFolderNameArray)
     for (let eachUtmCodeFolderName of utmCodeFolderNameArray) {
       let latitudeBandFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir + "/" + eachUtmCodeFolderName);
+    console.log(latitudeBandFolderNameArray)
       for (let eachLatitudeBandFolderName of latitudeBandFolderNameArray) {
         let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
+    console.log(squareFolderNameArray)
         for (let eachName of squareFolderNameArray) {
           allSquareFoldersPathInS3.push(tilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
         }
