@@ -1,5 +1,9 @@
 FROM docker.gagogroup.cn:5000/gdal-tiff-sentinel-aws
 
+# Mount S3 dir
+VOLUME ["/home/ec2-user/s3-gagobucket", "/home/ec2-user/s3-sentinel-2"]
+
+
 # Add all files to /usr/local/image-browser-aws/
 WORKDIR /usr/local/
 RUN mkdir gdal-tiff-sentinel-aws/

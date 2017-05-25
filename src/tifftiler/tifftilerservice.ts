@@ -2,6 +2,7 @@
 // Use of this source code is governed a license that can be found in the LICENSE file.
 
 import * as fs from "fs";
+import * as path from "path";
 
 import * as cron from "cron";
 import * as PythonShell from "python-shell";
@@ -25,9 +26,35 @@ export class TiffTilerService {
    * @memberOf TiffTilerService
    */
   static async startTransformImageToTiff(): Promise<void> {
-
+    try {
+      let newestImagesPaths: string[] =await TiffTilerService.getAllNewestImagesPaths();
+      const config: any = require("../../config/project.config.json");
+      const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
+      for (let imagePath of newestImagesPaths) {
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imagePath, outputTilesDir);
+      }
+    } catch(err) {
+      throw err;
+    }
   }
 
+
+  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: string, outputTilesDir: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      let options: any = {
+        args: ["0-5", tiffImagePath, outputTilesDir],
+        pythonOptions: ['-z']
+      };
+
+      let pythonCodePath: string =path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
+
+      PythonShell.run(pythonCodePath, options,  (err: Error) => {
+        if (err){
+          reject(new Error("PYTHON_RUN_ERROR"));
+        } 
+      });
+    });
+  }
   /**
    * Get all newest images (jp2) paths in s3, for gdal transform to tiff later
    * 
@@ -59,8 +86,8 @@ export class TiffTilerService {
    * @memberOf TiffTilerService
    */
   private static async getAllSquareFoldersPathInS3ForGdal_(): Promise<string[]> {
-    let config: any = require("../../config/project.config.json");
-    let tilesDir: string = config["sentinelImage"]["tilesDir"];
+    const config: any = require("../../config/project.config.json");
+    const tilesDir: string = config["sentinelImage"]["inputTilesDir"];
 
     let allSquareFoldersPathInS3: string[] = [];
 
@@ -75,6 +102,16 @@ export class TiffTilerService {
     return allSquareFoldersPathInS3;
   }
 
+  /**
+   * find folder's child folder name
+   * 
+   * @private
+   * @static
+   * @param {string} parentPath 
+   * @returns {Promise<string[]>} 
+   * 
+   * @memberOf TiffTilerService
+   */
   private static async getAllChildFolderName_(parentPath: string): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
       fs.readdir(parentPath, (err: NodeJS.ErrnoException, dirNames: string[]) => {
@@ -93,6 +130,16 @@ export class TiffTilerService {
     });
   }
 
+  /**
+   * Get a folder's all jp2 file path
+   * 
+   * @private
+   * @static
+   * @param {string} parentPath 
+   * @returns {Promise<string[]>} 
+   * 
+   * @memberOf TiffTilerService
+   */
   private static async getFolderAllImagePath_(parentPath: string): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
       fs.readdir(parentPath, (err: NodeJS.ErrnoException, files: string[]) => {
@@ -111,6 +158,17 @@ export class TiffTilerService {
     });
   }
 
+  /**
+   * The child folder in square folder is /[year]/[month]/[day]/[sequence]
+   * So find each child folder biggest number is the newest folder
+   * 
+   * @private
+   * @static
+   * @param {string[]} squareFolderPathArray 
+   * @returns {Promise<string[]>} 
+   * 
+   * @memberOf TiffTilerService
+   */
   private static async getAllSquareNewestImagesFolderPath_(squareFolderPathArray: string[]): Promise<string[]> {
     let newImagesFolderPathArray: string[] = [];
     for (let eachSquareFolderPath of squareFolderPathArray) {
@@ -125,8 +183,7 @@ export class TiffTilerService {
   }
 
   /**
-   * The child folder in square folder is /[year]/[month]/[day]/[sequence]
-   * So find each child folder biggest number is the newest folder
+   * packeage node readdir function and return biggest number (newest) folder name 
    * 
    * @private
    * @static

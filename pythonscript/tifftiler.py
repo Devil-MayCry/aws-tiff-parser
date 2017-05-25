@@ -154,8 +154,9 @@ class Raster(object):  # pylint: disable=C0111
                                       t_xsize, t_ysize)
         data_dst = t_band.ReadAsArray(t_xoff, t_yoff, t_xsize, t_ysize)
 
-        nodata_test = np.equal(s_band.GetMaskBand().ReadAsArray(), 0)  # 神奇, 勿动
-        # nodata_test = np.equal(data_src, nodata)  # pylint: disable=E1101
+        nodata_test = np.logical_or(np.equal(data_src, nodata), np.equal(data_src, 0)) # 默认会填充0, 找不到在哪填充的,
+        # 所以只要nodata或0都视为nodata
+
         to_write = np.choose(nodata_test, (data_src, data_dst))  # pylint: disable=E1101
 
         t_band.WriteArray(to_write, t_xoff, t_yoff)
@@ -1558,6 +1559,7 @@ class GDAL2Tiles(object):
                 # Tile dataset in memory
                 dstile = self.mem_drv.Create('', self.tilesize, self.tilesize, tilebands,
                                              self.in_datatype)
+
                 data = ds.ReadRaster(rx, ry, rxsize, rysize, wxsize, wysize,
                                      band_list=list(range(1, self.dataBandsCount + 1)))
                 # wuqinchun: 如果文件为空(所有的值都一样), 则不生成这块瓦片, 直接跳过
@@ -1584,13 +1586,13 @@ class GDAL2Tiles(object):
                                                       self.in_datatype)
                         # TODO: fill the null value in case a tile without alpha is produced
                         # (now only png tiles are supported)
-                        # for i in range(1, tilebands+1):
-                        #   dsquery.GetRasterBand(1).Fill(tilenodata)
+                        for i in range(1, tilebands + 1):
+                            dsquery.GetRasterBand(i).Fill(self.in_nodata[0])
+
                         dsquery.WriteRaster(wx, wy, wxsize, wysize, data,
                                             band_list=list(range(1, self.dataBandsCount + 1)))
                         # wuqinchun: 去掉alpha通道
                         # dsquery.WriteRaster(wx, wy, wxsize, wysize, alpha, band_list=[tilebands])
-
                         self.scale_query_to_tile(dsquery, dstile, tilefilename)
                         del dsquery
 
@@ -1665,7 +1667,6 @@ class GDAL2Tiles(object):
                         if self.options.verbose:
                             print("Tile generation skipped because of --resume")
                         else:
-                            # TODO:合并
                             self.progressbar(ti / float(tcount))
                         continue
 
@@ -1676,8 +1677,9 @@ class GDAL2Tiles(object):
                     dsquery = self.mem_drv.Create('', 2 * self.tilesize, 2 * self.tilesize,
                                                   tilebands, self.in_datatype)
                     # TODO: fill the null value
-                    # for i in range(1, tilebands+1):
-                    #   dsquery.GetRasterBand(1).Fill(tilenodata)
+                    for i in range(1, tilebands + 1):
+                        dsquery.GetRasterBand(i).Fill(self.in_nodata[0])
+
                     dstile = self.mem_drv.Create('', self.tilesize, self.tilesize, tilebands,
                                                  self.in_datatype)
 
@@ -2805,4 +2807,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
