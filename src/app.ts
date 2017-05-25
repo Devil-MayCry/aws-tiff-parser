@@ -1,5 +1,5 @@
 import {TiffTilerService} from "./tifftiler/tifftilerservice"
 
-TiffTilerService.startTransformImageToTiff();
+ TiffTilerService.startTransformImageToTiff();
 
 console.log("Server start");

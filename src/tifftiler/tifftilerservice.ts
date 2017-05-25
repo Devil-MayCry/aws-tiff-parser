@@ -6,6 +6,7 @@ import * as path from "path";
 
 import * as cron from "cron";
 import * as PythonShell from "python-shell";
+import * as async from "async";
 
 /**
  * The Service is a timing service running on aws ec2 server
@@ -90,13 +91,14 @@ export class TiffTilerService {
     const tilesDir: string = config["sentinelImage"]["inputTilesDir"];
 
     let allSquareFoldersPathInS3: string[] = [];
-
     let utmCodeFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir);
     for (let eachUtmCodeFolderName of utmCodeFolderNameArray) {
-      let latitudeBandFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir + eachUtmCodeFolderName);
+      let latitudeBandFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir + "/" + eachUtmCodeFolderName);
       for (let eachLatitudeBandFolderName of latitudeBandFolderNameArray) {
-        let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir + eachUtmCodeFolderName + eachLatitudeBandFolderName);
-        allSquareFoldersPathInS3.push(...squareFolderNameArray);
+        let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(tilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
+        for (let eachName of squareFolderNameArray) {
+          allSquareFoldersPathInS3.push(tilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
+        }
       }
     }
     return allSquareFoldersPathInS3;
@@ -116,15 +118,24 @@ export class TiffTilerService {
     return new Promise<string[]>((resolve, reject) => {
       fs.readdir(parentPath, (err: NodeJS.ErrnoException, dirNames: string[]) => {
         if (!err) {
-          let childFolderArray: string[] = [];
-          for(let eachDir of dirNames) {
+          async.mapLimit(dirNames, 100, (eachDir, done) => {
             fs.stat(parentPath + "/" +eachDir, (err: Error, stats: fs.Stats) => {
               if (stats.isDirectory()) {
-                childFolderArray.push(eachDir);
+                done(null, eachDir);
+              } else {
+                done (null, null);
               }
             });
-          }
-          resolve(childFolderArray);
+          }, (err: Error, values: string[]) => {
+            if (err) throw err;
+            let result: string[] = [];
+            values.forEach((eachDir: string) => {
+              if (eachDir) {
+                result.push(eachDir);
+              }
+            });
+            resolve(result);
+          });
         }
       });
     });
@@ -144,15 +155,24 @@ export class TiffTilerService {
     return new Promise<string[]>((resolve, reject) => {
       fs.readdir(parentPath, (err: NodeJS.ErrnoException, files: string[]) => {
         if (!err) {
-          let imagePathArray: string[] = [];
-          for(let eachFile of files) {
-            fs.stat(parentPath + "/" + eachFile, (err: Error, stats: fs.Stats) => {
+          async.mapLimit(files, 100, (eachFile, done) => {
+            fs.stat(parentPath + "/" +eachFile, (err: Error, stats: fs.Stats) => {
               if (stats.isFile() && eachFile.endsWith(".jp2")) {
-                imagePathArray.push(parentPath + "/" + eachFile);
+                done(null, parentPath + "/" + eachFile);
+              } else {
+                done (null, null);
               }
             });
-          }
-          resolve(imagePathArray);
+          }, (err: Error, values: string[]) => {
+            if (err) throw err;
+            let result: string[] = [];
+            values.forEach((eachFile: string) => {
+              if (eachFile) {
+                result.push(eachFile);
+              }
+            });
+            resolve(result);
+          });
         }
       });
     });
@@ -177,7 +197,8 @@ export class TiffTilerService {
       let newestDay: string = await TiffTilerService.findNewestChildFolderUtil_(eachSquareFolderPath + "/" + newestYear + "/" + newestMonth);
       let newestSequence: string = await TiffTilerService.findNewestChildFolderUtil_(eachSquareFolderPath + "/" + newestYear 
                                                                                     + "/" + newestMonth + "/" + newestDay);
-      newImagesFolderPathArray.push(newestSequence);
+      newImagesFolderPathArray.push(eachSquareFolderPath + "/" + newestYear 
+                                    + "/" + newestMonth + "/" + newestDay + "/" + newestSequence);
     }
     return newImagesFolderPathArray;
   }
@@ -207,7 +228,9 @@ export class TiffTilerService {
             return b - a;
           });
           if (validChildFolder.length > 0) {
-            return validChildFolder[0].toString();
+            resolve(validChildFolder[0].toString());
+          } else {
+            resolve(null);
           }
         }
       });
