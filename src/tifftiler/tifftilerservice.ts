@@ -7,6 +7,7 @@ import * as path from "path";
 import * as cron from "cron";
 import * as PythonShell from "python-shell";
 import * as async from "async";
+import * as child_process from "child_process";
 
 /**
  * The Service is a timing service running on aws ec2 server
@@ -66,7 +67,7 @@ export class TiffTilerService {
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: string, outputTilesDir: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      let pythonCodePath: string =path.resolve(`${__dirname}/../../pythonscript`);
+      let pythonCodePath: string =path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 
       let options: any = {
         scriptPath: pythonCodePath,
@@ -74,11 +75,14 @@ export class TiffTilerService {
       };
 
 
-      PythonShell.run("tifftiler.py", options,  (err: Error) => {
-        if (err){
+      PythonShell.run("", options,  (err: Error) => {
+
+      });
+
+      let  process: child_process.ChildProcess = child_process.spawn('python',[pythonCodePath, "-z", "0-5", tiffImagePath, outputTilesDir]);
+      process.stderr.on('data', (err) => {
           console.log(err);
           reject(new Error("PYTHON_RUN_ERROR"));
-        } 
       });
     });
   }
