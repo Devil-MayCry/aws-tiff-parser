@@ -67,8 +67,7 @@ export class TiffTilerService {
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: string, outputTilesDir: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let options: any = {
-        args: ["0-5", tiffImagePath, outputTilesDir],
-        pythonOptions: ['-z']
+        args: ["-z", "0-5", tiffImagePath, outputTilesDir]
       };
 
       let pythonCodePath: string =path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
