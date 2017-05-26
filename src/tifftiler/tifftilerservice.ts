@@ -17,6 +17,29 @@ import * as async from "async";
  * @class TiffTilerService
  */
 export class TiffTilerService {
+
+  static async testTransformImageToTiff(): Promise<void> {
+    try {
+      let testFirstFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2015/12/7/0/B09.jp2";
+      let testSecondFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2015/12/27/0/B01.jp2";
+      let testThirdFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2016/3/6/0/B02.jp2";
+      let testForthFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/R/GT/2017/4/14/0/B12.jp2";
+
+
+      const config: any = require("../../config/project.config.json");
+      const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
+
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testFirstFile, outputTilesDir);
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testSecondFile, outputTilesDir);
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testThirdFile, outputTilesDir);
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testForthFile, outputTilesDir);
+        console.log("end tiff tiler");
+    } catch(err) {
+
+    }
+  }
+
+
   /**
    * Main service functon
    * Get all newest valid jp2 file path
@@ -52,6 +75,7 @@ export class TiffTilerService {
 
       PythonShell.run(pythonCodePath, options,  (err: Error) => {
         if (err){
+          console.log(err);
           reject(new Error("PYTHON_RUN_ERROR"));
         } 
       });
