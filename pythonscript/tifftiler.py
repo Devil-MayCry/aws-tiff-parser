@@ -1586,7 +1586,7 @@ class GDAL2Tiles(object):
                                                       self.in_datatype)
                         # TODO: fill the null value in case a tile without alpha is produced
                         # (now only png tiles are supported)
-                        if self.in_nodata is not None:
+                        if len(self.in_nodata) > 0:
                             for i in range(1, tilebands + 1):
                                 dsquery.GetRasterBand(i).Fill(self.in_nodata[0])
 
@@ -1678,7 +1678,7 @@ class GDAL2Tiles(object):
                     dsquery = self.mem_drv.Create('', 2 * self.tilesize, 2 * self.tilesize,
                                                   tilebands, self.in_datatype)
                     # TODO: fill the null value
-                    if self.in_nodata is not None:
+                    if len(self.in_nodata) > 0:
                         for i in range(1, tilebands + 1):
                             dsquery.GetRasterBand(i).Fill(self.in_nodata[0])
 
