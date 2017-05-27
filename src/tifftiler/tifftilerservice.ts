@@ -7,6 +7,7 @@ import * as path from "path";
 import * as cron from "cron";
 import * as PythonShell from "python-shell";
 import * as async from "async";
+import * as child_process from "child_process";
 
 /**
  * The Service is a timing service running on aws ec2 server
@@ -17,6 +18,29 @@ import * as async from "async";
  * @class TiffTilerService
  */
 export class TiffTilerService {
+
+  static async testTransformImageToTiff(): Promise<void> {
+    try {
+      let testFirstFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2015/12/7/0/B09.jp2";
+      let testSecondFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2015/12/27/0/B01.jp2";
+      let testThirdFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2016/3/6/0/B02.jp2";
+      let testForthFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/R/GT/2017/4/14/0/B12.jp2";
+
+
+      const config: any = require("../../config/project.config.json");
+      const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
+
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testFirstFile, outputTilesDir);
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testSecondFile, outputTilesDir);
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testThirdFile, outputTilesDir);
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testForthFile, outputTilesDir);
+        console.log("end tiff tiler");
+    } catch(err) {
+
+    }
+  }
+
+
   /**
    * Main service functon
    * Get all newest valid jp2 file path
@@ -43,17 +67,22 @@ export class TiffTilerService {
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: string, outputTilesDir: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      let options: any = {
-        args: ["0-5", tiffImagePath, outputTilesDir],
-        pythonOptions: ['-z']
-      };
-
       let pythonCodePath: string =path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 
-      PythonShell.run(pythonCodePath, options,  (err: Error) => {
-        if (err){
+      let options: any = {
+        scriptPath: pythonCodePath,
+        args: ["-z", "0-5", tiffImagePath, outputTilesDir]
+      };
+
+
+      PythonShell.run("", options,  (err: Error) => {
+
+      });
+
+      let  process: child_process.ChildProcess = child_process.spawn('python',[pythonCodePath, "-z", "0-5", tiffImagePath, outputTilesDir]);
+      process.stderr.on('data', (err) => {
+          console.log(err);
           reject(new Error("PYTHON_RUN_ERROR"));
-        } 
       });
     });
   }
