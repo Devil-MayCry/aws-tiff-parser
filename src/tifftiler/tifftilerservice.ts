@@ -164,7 +164,7 @@ export class TiffTilerService {
 
       // If all square path have been saved, Use the file to get them
       const config: any = require("../../config/project.config.json");
-      const outPutTilesDir: string = config["sentinelImage"]["inputTilesDir"];
+      const outPutTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       let fileSavedAllSquareFoldersPath: string = outPutTilesDir + "allSquareFolderPaths.txt";
 
       try {
