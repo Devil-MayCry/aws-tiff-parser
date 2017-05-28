@@ -165,12 +165,14 @@ export class TiffTilerService {
       // If all square path have been saved, Use the file to get them
       const config: any = require("../../config/project.config.json");
       const outPutTilesDir: string = config["sentinelImage"]["inputTilesDir"];
-      let fileSavedAllSquareFoldersPath: string = outPutTilesDir + "allSquareFolderPaths";
+      let fileSavedAllSquareFoldersPath: string = outPutTilesDir + "allSquareFolderPaths.txt";
 
       try {
         let allSquareFoldersPathInS3: string[] = [];
 
         // If the file is exist
+        fs.accessSync(fileSavedAllSquareFoldersPath);
+
         let lineReader: readline.ReadLine = readline.createInterface({
           input: fs.createReadStream(fileSavedAllSquareFoldersPath)
         });
