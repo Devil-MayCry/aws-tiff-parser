@@ -194,7 +194,7 @@ export class TiffTilerService {
     const config: any = require("../../config/project.config.json");
     const inputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
 
-    const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllSquareFoldersPath);
+   // const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllSquareFoldersPath);
 
     let allSquareFoldersPathInS3: string[] = [];
 
@@ -206,7 +206,7 @@ export class TiffTilerService {
         for (let eachName of squareFolderNameArray) {
           allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
           console.log(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
-          stream.write(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/n");
+ //         stream.write(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/n");
         }
       }
     }
