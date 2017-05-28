@@ -193,8 +193,6 @@ export class TiffTilerService {
   private static async readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath: string): Promise<string[]> {
     const config: any = require("../../config/project.config.json");
     const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
-    const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-console.log(inputTilesDir);
     const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllSquareFoldersPath);
 
     let allSquareFoldersPathInS3: string[] = [];
@@ -206,8 +204,8 @@ console.log(inputTilesDir);
         let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
         for (let eachName of squareFolderNameArray) {
           allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
-          console.log(outputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
-          stream.write(outputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + `\n`);
+          console.log(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
+          stream.write(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/" + `\n`);
         }
       }
     }
