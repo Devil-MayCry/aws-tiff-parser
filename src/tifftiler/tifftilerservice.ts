@@ -190,7 +190,7 @@ export class TiffTilerService {
 
   private static async readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath: string): Promise<string[]> {
     const config: any = require("../../config/project.config.json");
-    const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
+    const inputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
 
     const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllSquareFoldersPath);
 
