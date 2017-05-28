@@ -20,9 +20,10 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "async": "^2.1.2",
     "cron": "^1.2.1",
     "python-shell": "^0.4.0",
-    "async": "^2.1.2"
+    "walk": "^2.3.9"
   },
   "devDependencies": {
     "@types/cron": "^1.2.0",
