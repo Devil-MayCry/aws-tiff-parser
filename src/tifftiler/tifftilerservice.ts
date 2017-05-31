@@ -180,6 +180,7 @@ export class TiffTilerService {
           resolve(allSquareFoldersPathInS3);
         });
       } catch (err) {
+        console.log(err);
         TiffTilerService.readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath).then((allSquareFoldersPathInS3: string[]) =>{
           resolve(allSquareFoldersPathInS3);
         });
