@@ -41,6 +41,7 @@ export class TiffTilerService {
       let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
+
       for (let imageInfo of imagesInfos) {
         await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
       }
@@ -72,11 +73,14 @@ export class TiffTilerService {
         } else {
           fs.mkdirSync(outputDir);
         }
-        // let  process: child_process.ChildProcess = child_process.spawn("python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-        // process.stderr.on("data", (err) => {
-        //     console.log(err);
-        //     reject(new Error("PYTHON_RUN_ERROR"));
-        // });
+        let  process: child_process.ChildProcess = child_process.spawn("python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+        process.stderr.on("data", (err) => {
+          if (err) {
+            reject(new Error("PYTHON_RUN_ERROR"));
+          } else {
+            resolve();
+          }
+        });
       });
     });
   }
@@ -310,7 +314,6 @@ export class TiffTilerService {
         });
       }, (err: Error, values: string[]) => {
         if (err) throw err;
-        console.log(values);
         resolve(imagePathArray);
       });
     });
