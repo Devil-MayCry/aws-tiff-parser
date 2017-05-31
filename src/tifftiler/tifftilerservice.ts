@@ -299,7 +299,7 @@ export class TiffTilerService {
         fs.stat(folderPath, (err: Error, stats: fs.Stats) => {
           if (stats && stats.isDirectory()) {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
-              imagePathArray.concat(data);
+              imagePathArray.push(...data);
               console.log(data);
               done();
             });
@@ -308,7 +308,7 @@ export class TiffTilerService {
       }, (err: Error, values: string[]) => {
         if (err) throw err;
               console.log("end");
-              console.log(values.length)
+              console.log(values.length);
         resolve(imagePathArray);
       });
     });
