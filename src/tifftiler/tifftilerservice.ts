@@ -33,7 +33,7 @@ export class TiffTilerService {
    * Use gdal to transform these files to tiff files
    * Save them in aws s3, for image-browser project using
    * @static
-   * 
+   *
    * @memberOf TiffTilerService
    */
   static async startTransformImageToTiff(year: number, month: number, maxZoom: number, waveArray: string[]): Promise<void> {

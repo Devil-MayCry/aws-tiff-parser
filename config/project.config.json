@@ -1,6 +1,6 @@
 {
   "sentinelImage": {
-    "inputTilesDir": "/home/ec2-user/s3-sentinel-2/tiles/",
-    "outputTilesDir": "/home/ec2-user/s3-gagobucket/tiles/"
+    "inputTilesDir": "/mountdata/s3-sentinel-2/tiles/",
+    "outputTilesDir": "/mountdata/s3-gagobucket/tiles/"
   }
 }
