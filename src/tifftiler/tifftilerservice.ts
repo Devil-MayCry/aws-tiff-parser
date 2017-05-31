@@ -12,6 +12,11 @@ import * as child_process from "child_process";
 
 const walk = require("walk")
 
+interface WaveFile {
+  filePath: string;
+  waveType: string;
+}
+
 /**
  * The Service is a timing service running on aws ec2 server
  * The task of the service is to transform sentinel-2 origin jp2 file to tiff files
@@ -22,28 +27,6 @@ const walk = require("walk")
  */
 export class TiffTilerService {
 
-  // static async testTransformImageToTiff(): Promise<void> {
-  //   try {
-  //     let testFirstFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2015/12/7/0/B09.jp2";
-  //     let testSecondFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2015/12/27/0/B01.jp2";
-  //     let testThirdFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/S/DG/2016/3/6/0/B02.jp2";
-  //     let testForthFile: string = "/home/ec2-user/s3-sentinel-2/tiles/10/R/GT/2017/4/14/0/B12.jp2";
-
-
-  //     const config: any = require("../../config/project.config.json");
-  //     const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-
-  //       await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testFirstFile, outputTilesDir);
-  //       await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testSecondFile, outputTilesDir);
-  //       await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testThirdFile, outputTilesDir);
-  //       await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(testForthFile, outputTilesDir);
-  //       console.log("end tiff tiler");
-  //   } catch(err) {
-
-  //   }
-  // }
-
-
   /**
    * Main service functon
    * Get all newest valid jp2 file path
@@ -53,38 +36,47 @@ export class TiffTilerService {
    * 
    * @memberOf TiffTilerService
    */
-  static async startTransformImageToTiff(): Promise<void> {
+  static async startTransformImageToTiff(year: number, month: number, maxZoom: number, waveArray: string[]): Promise<void> {
     try {
-      let newestImagesPaths: string[] = await TiffTilerService.getAllNewestImagesPaths();
-      console.log(newestImagesPaths);
+      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-      // for (let imagePath of newestImagesPaths) {
-      //   await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imagePath, outputTilesDir);
-      // }
+      for (let imageInfo of imagesInfos) {
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
+      }
     } catch (err) {
       throw err;
     }
   }
 
-  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: string, outputTilesDir: string): Promise<void> {
+  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, maxZoom: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let pythonCodePath: string = path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 
-      let options: any = {
-        scriptPath: pythonCodePath,
-        args: ["-z", "0-2", tiffImagePath, outputTilesDir]
-      };
+      // let options: any = {
+      //   scriptPath: pythonCodePath,
+      //   args: ["-z", `0-${maxZoom}`, tiffImagePath, outputTilesDir]
+      // };
 
 
-      PythonShell.run("", options,  (err: Error) => {
+      // PythonShell.run("", options,  (err: Error) => {
 
-      });
-
-      let  process: child_process.ChildProcess = child_process.spawn("python", [pythonCodePath, "-z", "0-5", tiffImagePath, outputTilesDir]);
-      process.stderr.on("data", (err) => {
-          console.log(err);
-          reject(new Error("PYTHON_RUN_ERROR"));
+      // });
+      let filePath: string = tiffImagePath.filePath;
+      let outputDir: string = outputTilesDir + tiffImagePath.waveType;
+      console.log(filePath);
+      console.log(outputDir);
+      fs.stat(outputDir, (err: Error, stats: fs.Stats) => {
+        if (stats && stats.isDirectory()) {
+          // do nothing
+        } else {
+          fs.mkdirSync(outputDir);
+        }
+        // let  process: child_process.ChildProcess = child_process.spawn("python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+        // process.stderr.on("data", (err) => {
+        //     console.log(err);
+        //     reject(new Error("PYTHON_RUN_ERROR"));
+        // });
       });
     });
   }
@@ -96,17 +88,12 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  static async getAllNewestImagesPaths(): Promise<string[]> {
+  static async getSplitedImagesPaths(year: number, month: number, waveArray: string[]): Promise<WaveFile[]> {
     let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
      // console.log(allSquareFoldersPathInS3);
-    let allSquareNewestImagesFolderPathArray: string[] = await TiffTilerService.getAllSquareNewestImagesFolderPath_(allSquareFoldersPathInS3);
-    let allNewestImagesPathArray: string[] = [];
-    for (let eachNewestFolder of allSquareNewestImagesFolderPathArray) {
-      let files: string [] =  await TiffTilerService.getFolderAllImagePath_(eachNewestFolder);
-      allNewestImagesPathArray.push(...files);
-    }
+    let allSpecifyImagesPathArray: WaveFile[] = await TiffTilerService.getAllSpecifyImagesPath_(allSquareFoldersPathInS3, year, month, waveArray);
      // console.log(allNewestImagesPathArray);
-    return allNewestImagesPathArray;
+    return allSpecifyImagesPathArray;
   }
 
   /**
@@ -118,18 +105,23 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  private static async getAllImageFilesByWalkLibary_(): Promise<string[]> {
-    return new Promise<string[]>((resolve, reject) => {
+  private static async getAllImageFilesByWalkLibary_(rootDir: string, waveArray: string[]): Promise<WaveFile[]> {
+    return new Promise<WaveFile[]>((resolve, reject) => {
 
-      let filePathArray: string[] =[];
-      const config: any = require("../../config/project.config.json");
-      const tilesDir: string = config["sentinelImage"]["inputTilesDir"];
+      let filePathArray: WaveFile[] =[];
 
-      const walker = walk.walk(tilesDir);
+      const walker = walk.walk(rootDir);
 
       walker.on("file", function (root: any, fileStats: any, next: any) {
-        if (fileStats.name.endsWith(".jp2")) {
-          filePathArray.push(root + fileStats.name);
+        let fileName: string =  fileStats.name;
+        console.log(fileName);
+        if (fileName.endsWith(".jp2")) {
+          let waveNameInArray: string[] = fileName.split(".");
+          let wave: string = waveNameInArray[0]
+
+          if (waveArray.indexOf(wave) !== -1) {
+            filePathArray.push({filePath: root + fileName, waveType: wave});
+          }
         }
         next();
       });
@@ -139,6 +131,7 @@ export class TiffTilerService {
       });
 
       walker.on("end", function () {
+        console.log(filePathArray);
         resolve(filePathArray);
       });
     });
@@ -178,6 +171,7 @@ export class TiffTilerService {
         });
 
         lineReader.on("line", (line: any) => {
+          console.log(line);
           allSquareFoldersPathInS3.push(line.toString());
         }).on("close", () => {
           resolve(allSquareFoldersPathInS3);
@@ -250,46 +244,48 @@ export class TiffTilerService {
     });
   }
 
-  /**
-   * Get a folder's all jp2 file path
-   *
-   * @private
-   * @static
-   * @param {string} parentPath
-   * @returns {Promise<string[]>}
-   *
-   * @memberOf TiffTilerService
-   */
-  private static async getFolderAllImagePath_(parentPath: string): Promise<string[]> {
-    return new Promise<string[]>((resolve, reject) => {
-      fs.readdir(parentPath, (err: NodeJS.ErrnoException, files: string[]) => {
-        if (!err) {
-          async.mapLimit(files, 100, (eachFile, done) => {
-            fs.stat(parentPath + "/" + eachFile, (err: Error, stats: fs.Stats) => {
-              if (stats.isFile() && eachFile.endsWith(".jp2")) {
-                done(null, parentPath + "/" + eachFile);
-              } else {
-                done (null, null);
-              }
-            });
-          }, (err: Error, values: string[]) => {
-            if (err) throw err;
-            let result: string[] = [];
-            values.forEach((eachFile: string) => {
-              if (eachFile) {
-                result.push(eachFile);
-              }
-            });
-            resolve(result);
-          });
-        }
-      });
-    });
-  }
+  // /**
+  //  * Get a folder's all jp2 file path
+  //  *
+  //  * @private
+  //  * @static
+  //  * @param {string} parentPath
+  //  * @returns {Promise<string[]>}
+  //  *
+  //  * @memberOf TiffTilerService
+  //  */
+  // private static async getFolderAllImagePath_(parentPath: string): Promise<string[]> {
+  //   return new Promise<string[]>((resolve, reject) => {
+  //     fs.readdir(parentPath, (err: NodeJS.ErrnoException, files: string[]) => {
+  //       if (!err) {
+  //         async.mapLimit(files, 100, (eachFile, done) => {
+  //           fs.stat(parentPath + "/" + eachFile, (err: Error, stats: fs.Stats) => {
+  //             if (stats.isFile() && eachFile.endsWith(".jp2")) {
+  //               done(null, parentPath + "/" + eachFile);
+  //             } else {
+  //               done (null, null);
+  //             }
+  //           });
+  //         }, (err: Error, values: string[]) => {
+  //           if (err) throw err;
+  //           let result: string[] = [];
+  //           values.forEach((eachFile: string) => {
+  //             if (eachFile) {
+  //               result.push(eachFile);
+  //             }
+  //           });
+  //           resolve(result);
+  //         });
+  //       }
+  //     });
+  //   });
+  // }
 
   /**
    * The child folder in square folder is /[year]/[month]/[day]/[sequence]
    * So find each child folder biggest number is the newest folder
+   *
+   * No use for now
    *
    * @private
    * @static
@@ -298,22 +294,31 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  private static async getAllSquareNewestImagesFolderPath_(squareFolderPathArray: string[]): Promise<string[]> {
-    let newImagesFolderPathArray: string[] = [];
-    for (let eachSquareFolderPath of squareFolderPathArray) {
-      let newestYear: string = await TiffTilerService.findNewestChildFolderUtil_(eachSquareFolderPath);
-      let newestMonth: string = await TiffTilerService.findNewestChildFolderUtil_(eachSquareFolderPath + "/" + newestYear);
-      let newestDay: string = await TiffTilerService.findNewestChildFolderUtil_(eachSquareFolderPath + "/" + newestYear + "/" + newestMonth);
-      let newestSequence: string = await TiffTilerService.findNewestChildFolderUtil_(eachSquareFolderPath + "/" + newestYear 
-                                                                                    + "/" + newestMonth + "/" + newestDay);
-      newImagesFolderPathArray.push(eachSquareFolderPath + "/" + newestYear 
-                                    + "/" + newestMonth + "/" + newestDay + "/" + newestSequence);
-    }
-    return newImagesFolderPathArray;
+  private static async getAllSpecifyImagesPath_(squareFolderPathArray: string[], year: number, month: number, waveArray: string[]): Promise<WaveFile[]> {
+    return new Promise<WaveFile[]>((resolve, reject) => {
+      let imagePathArray: WaveFile[] = [];
+      async.mapLimit(squareFolderPathArray, 100, (eachDir, done) => {
+        let folderPath: string = eachDir + year + "/" + month;
+        console.log(folderPath);
+        fs.stat(folderPath, (err: Error, stats: fs.Stats) => {
+          if (stats.isDirectory()) {
+            TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
+              imagePathArray.concat(data);
+              done();
+            });
+          }
+        });
+      }, (err: Error, values: string[]) => {
+        if (err) throw err;
+        resolve(imagePathArray);
+      });
+    });
   }
 
   /**
    * packeage node readdir function and return biggest number (newest) folder name 
+   *
+   * No use for now
    *
    * @private
    * @static
@@ -333,7 +338,7 @@ export class TiffTilerService {
             }
           }
           // sort from biggest to lowest
-          validChildFolder.sort((a: number,b: number) => {
+          validChildFolder.sort((a: number, b: number) => {
             return b - a;
           });
           if (validChildFolder.length > 0) {
