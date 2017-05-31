@@ -166,21 +166,24 @@ export class TiffTilerService {
 
         // If the file is exist
         fs.accessSync(fileSavedAllSquareFoldersPath);
-      console.log("eeeeee");
 
-        let lineReader: readline.ReadLine = readline.createInterface({
-          input: fs.createReadStream(fileSavedAllSquareFoldersPath)
-        });
-      console.log("ttttttt");
+        // let lineReader: readline.ReadLine = readline.createInterface({
+        //   input: fs.createReadStream(fileSavedAllSquareFoldersPath)
+        // });
 
-        lineReader.on("line", (line: any) => {
-          console.log(line.toString());
-          allSquareFoldersPathInS3.push(line.toString());
-        }).on("close", () => {
-          resolve(allSquareFoldersPathInS3);
-        });
+        // lineReader.on("line", (line: any) => {
+        //   allSquareFoldersPathInS3.push(line.toString());
+        // }).on("close", () => {
+        //   resolve(allSquareFoldersPathInS3);
+        // });
+        fs.readFile(fileSavedAllSquareFoldersPath, (err: Error, data: Buffer) => {
+          console.log(data.toString());
+          let array: string[] = data.toString().split("\n");
+          console.log(array);
+          resolve(array)
+        })
+
       } catch (err) {
-        console.log(err);
         TiffTilerService.readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath).then((allSquareFoldersPathInS3: string[]) =>{
           resolve(allSquareFoldersPathInS3);
         });
