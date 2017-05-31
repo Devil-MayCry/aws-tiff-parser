@@ -92,7 +92,7 @@ export class TiffTilerService {
     let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
      // console.log(allSquareFoldersPathInS3);
     let allSpecifyImagesPathArray: WaveFile[] = await TiffTilerService.getAllSpecifyImagesPath_(allSquareFoldersPathInS3, year, month, waveArray);
-     // console.log(allNewestImagesPathArray);
+    console.log(allSpecifyImagesPathArray);
     return allSpecifyImagesPathArray;
   }
 
@@ -114,13 +114,12 @@ export class TiffTilerService {
 
       walker.on("file", function (root: any, fileStats: any, next: any) {
         let fileName: string =  fileStats.name;
-        console.log(fileName);
         if (fileName.endsWith(".jp2")) {
           let waveNameInArray: string[] = fileName.split(".");
-          let wave: string = waveNameInArray[0]
+          let wave: string = waveNameInArray[0];
 
-          if (waveArray.indexOf(wave) !== -1) {
-            filePathArray.push({filePath: root + fileName, waveType: wave});
+          if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
+            filePathArray.push({filePath: root + "/" + fileName, waveType: wave});
           }
         }
         next();
@@ -159,7 +158,6 @@ export class TiffTilerService {
       const config: any = require("../../config/project.config.json");
       const outPutTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       let fileSavedAllSquareFoldersPath: string = outPutTilesDir + "allSquareFolderPaths.txt";
-      console.log(fileSavedAllSquareFoldersPath);
 
       try {
         let allSquareFoldersPathInS3: string[] = [];
@@ -199,7 +197,7 @@ export class TiffTilerService {
         let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
         for (let eachName of squareFolderNameArray) {
           allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
-          console.log(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
+          // console.log(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
           stream.write(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/" + `\n`);
         }
       }
@@ -300,7 +298,6 @@ export class TiffTilerService {
       let imagePathArray: WaveFile[] = [];
       async.mapLimit(squareFolderPathArray, 100, (eachDir, done) => {
         let folderPath: string = eachDir + year + "/" + month;
-        console.log(folderPath);
         fs.stat(folderPath, (err: Error, stats: fs.Stats) => {
           if (stats && stats.isDirectory()) {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
