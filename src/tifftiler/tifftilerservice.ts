@@ -166,13 +166,15 @@ export class TiffTilerService {
 
         // If the file is exist
         fs.accessSync(fileSavedAllSquareFoldersPath);
+      console.log("eeeeee");
 
         let lineReader: readline.ReadLine = readline.createInterface({
           input: fs.createReadStream(fileSavedAllSquareFoldersPath)
         });
+      console.log("ttttttt");
 
         lineReader.on("line", (line: any) => {
-          console.log(line);
+          console.log(line.toString());
           allSquareFoldersPathInS3.push(line.toString());
         }).on("close", () => {
           resolve(allSquareFoldersPathInS3);
