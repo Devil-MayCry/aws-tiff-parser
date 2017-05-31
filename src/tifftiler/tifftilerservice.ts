@@ -179,7 +179,7 @@ export class TiffTilerService {
         console.log(fileSavedAllSquareFoldersPath);
         fs.readFile(fileSavedAllSquareFoldersPath, (err: Error, data: Buffer) => {
           console.log(err);
-          console.log(data.toString());
+          console.log(data);
           let array: string[] = data.toString().split("\n");
           console.log(array);
           resolve(array)
