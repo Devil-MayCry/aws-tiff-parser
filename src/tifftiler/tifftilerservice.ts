@@ -90,7 +90,7 @@ export class TiffTilerService {
    */
   static async getSplitedImagesPaths(year: number, month: number, waveArray: string[]): Promise<WaveFile[]> {
     let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
-     // console.log(allSquareFoldersPathInS3);
+    console.log(allSquareFoldersPathInS3);
     let allSpecifyImagesPathArray: WaveFile[] = await TiffTilerService.getAllSpecifyImagesPath_(allSquareFoldersPathInS3, year, month, waveArray);
     console.log(allSpecifyImagesPathArray);
     return allSpecifyImagesPathArray;
@@ -108,7 +108,7 @@ export class TiffTilerService {
   private static async getAllImageFilesByWalkLibary_(rootDir: string, waveArray: string[]): Promise<WaveFile[]> {
     return new Promise<WaveFile[]>((resolve, reject) => {
 
-      let filePathArray: WaveFile[] =[];
+      let filePathArray: WaveFile[] = [];
 
       const walker = walk.walk(rootDir);
 
@@ -117,7 +117,8 @@ export class TiffTilerService {
         if (fileName.endsWith(".jp2")) {
           let waveNameInArray: string[] = fileName.split(".");
           let wave: string = waveNameInArray[0];
-
+          console.log(fileName);
+          console.log(root);
           if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
             filePathArray.push({filePath: root + "/" + fileName, waveType: wave});
           }
