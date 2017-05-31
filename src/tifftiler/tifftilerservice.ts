@@ -300,15 +300,14 @@ export class TiffTilerService {
           if (stats && stats.isDirectory()) {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
               imagePathArray.push(...data);
-              console.log(data);
             });
           }
+          console.log("done");
           done();
         });
       }, (err: Error, values: string[]) => {
         if (err) throw err;
-              console.log("end");
-              console.log(values.length);
+        console.log(values);
         resolve(imagePathArray);
       });
     });
