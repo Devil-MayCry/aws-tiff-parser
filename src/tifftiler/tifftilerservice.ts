@@ -302,7 +302,7 @@ export class TiffTilerService {
         let folderPath: string = eachDir + year + "/" + month;
         console.log(folderPath);
         fs.stat(folderPath, (err: Error, stats: fs.Stats) => {
-          if (stats.isDirectory()) {
+          if (stats && stats.isDirectory()) {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
               imagePathArray.concat(data);
               done();
