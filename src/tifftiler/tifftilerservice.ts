@@ -38,16 +38,30 @@ export class TiffTilerService {
    */
   static async startTransformImageToTiff(year: number, month: number, maxZoom: number, waveArray: string[]): Promise<void> {
     try {
-      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
-      const config: any = require("../../config/project.config.json");
-      const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
+      // let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
+      // const config: any = require("../../config/project.config.json");
+      // const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
 
-      for (let imageInfo of imagesInfos) {
-        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
-      }
+      // for (let imageInfo of imagesInfos) {
+      //   await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
+      // }
+       await TiffTilerService.testPython();
     } catch (err) {
       throw err;
     }
+  }
+
+  static async testPython(): Promise<void> {
+      let pythonCodePath: string = path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
+console.log(pythonCodePath);    
+        let  process: child_process.ChildProcess = child_process.spawn("python", [pythonCodePath, "-z", `0-6`, "/mountdata/s3-sentinel-2/tiles/56/M/LA/2017/5/1/0/B02.jp2", "/mountdata/s3-gagobucket/tiles/B01/"]);
+        process.stderr.on("data", (err) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("success");
+          }
+        });  
   }
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, maxZoom: number): Promise<void> {
