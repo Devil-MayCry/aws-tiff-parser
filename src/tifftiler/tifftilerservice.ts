@@ -117,8 +117,6 @@ export class TiffTilerService {
         if (fileName.endsWith(".jp2")) {
           let waveNameInArray: string[] = fileName.split(".");
           let wave: string = waveNameInArray[0];
-          console.log(fileName);
-          console.log(root);
           if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
             filePathArray.push({filePath: root + "/" + fileName, waveType: wave});
           }
@@ -131,7 +129,6 @@ export class TiffTilerService {
       });
 
       walker.on("end", function () {
-        console.log(filePathArray);
         resolve(filePathArray);
       });
     });
@@ -303,12 +300,15 @@ export class TiffTilerService {
           if (stats && stats.isDirectory()) {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
               imagePathArray.concat(data);
+              console.log(data);
               done();
             });
           }
         });
       }, (err: Error, values: string[]) => {
         if (err) throw err;
+              console.log("end");
+              console.log(values.length)
         resolve(imagePathArray);
       });
     });
