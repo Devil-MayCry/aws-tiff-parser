@@ -159,6 +159,7 @@ export class TiffTilerService {
       const config: any = require("../../config/project.config.json");
       const outPutTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       let fileSavedAllSquareFoldersPath: string = outPutTilesDir + "allSquareFolderPaths.txt";
+      console.log(fileSavedAllSquareFoldersPath);
 
       try {
         let allSquareFoldersPathInS3: string[] = [];
