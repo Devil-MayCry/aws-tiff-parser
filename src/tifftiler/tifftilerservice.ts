@@ -47,7 +47,7 @@ export class TiffTilerService {
       const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
       // await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
-      async.eachLimit(imagesInfos, 5, (imageInfo, done) => {
+      async.eachLimit(imagesInfos, 2, (imageInfo, done) => {
         TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
         done();
       }, (err: Error) => {
