@@ -55,19 +55,26 @@ export class TiffTilerService {
 
   static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      for (let wave of waveArray) {
+      async.each(waveArray, (wave, done) => {
         let outputDir: string = outputTilesDir + wave;
         console.log(outputDir);
         fs.stat(outputDir, (err, stats) => {
           if (stats) {
             console.log("exist");
+            done();
           }else {
             fs.mkdirSync(outputDir);
             console.log("create folder");
+            done();
           }
         });
-      }
-      resolve();
+      }, (err: Error) => {
+        if (err) reject(err);
+        else {
+          console.log("create end...");
+          resolve();
+        }
+      });
     });
   }
 
@@ -75,15 +82,6 @@ export class TiffTilerService {
     return new Promise<void>((resolve, reject) => {
       let pythonCodePath: string = path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 
-      // let options: any = {
-      //   scriptPath: pythonCodePath,
-      //   args: ["-z", `0-${maxZoom}`, tiffImagePath, outputTilesDir]
-      // };
-
-
-      // PythonShell.run("", options,  (err: Error) => {
-
-      // });
       let filePath: string = tiffImagePath.filePath;
       let outputDir: string = outputTilesDir + tiffImagePath.waveType;
       console.log(filePath);
