@@ -43,7 +43,7 @@ export class TiffTilerService {
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
 
       for (let imageInfo of imagesInfos) {
-        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
+        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
       }
     } catch (err) {
       throw err;
