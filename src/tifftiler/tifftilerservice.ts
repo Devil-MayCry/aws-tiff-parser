@@ -38,11 +38,9 @@ export class TiffTilerService {
    */
   static async startTransformImageToTiff(year: number, month: number, maxZoom: number, waveArray: string[]): Promise<void> {
     try {
-      // let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
+      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-      let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
-        { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" }]
       await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
       for (let imageInfo of imagesInfos) {
@@ -57,21 +55,17 @@ export class TiffTilerService {
     return new Promise<void>((resolve, reject) => {
       async.each(waveArray, (wave, done) => {
         let outputDir: string = outputTilesDir + wave;
-        console.log(outputDir);
         fs.stat(outputDir, (err, stats) => {
           if (stats) {
-            console.log("exist");
             done();
           }else {
             fs.mkdirSync(outputDir);
-            console.log("create folder");
             done();
           }
         });
       }, (err: Error) => {
         if (err) reject(err);
         else {
-          console.log("create end...");
           resolve();
         }
       });
