@@ -42,11 +42,26 @@ export class TiffTilerService {
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
 
+      await TiffTilerService.createFolder(outputTilesDir, waveArray);
+
       for (let imageInfo of imagesInfos) {
         TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
       }
     } catch (err) {
       throw err;
+    }
+  }
+
+  static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
+    for (let wave of waveArray) {
+      let outputDir: string = outputTilesDir + wave;
+      let stats: fs.Stats = fs.statSync(outputDir);
+      if (stats && stats.isDirectory()) {
+        console.log("exist");
+      } else {
+        fs.mkdirSync(outputDir);
+        console.log("create folder");
+      }
     }
   }
 
@@ -67,28 +82,14 @@ export class TiffTilerService {
       let outputDir: string = outputTilesDir + tiffImagePath.waveType;
       console.log(filePath);
       console.log(outputDir);
-      fs.stat(outputDir, (err: Error, stats: fs.Stats) => {
-        if (stats && stats.isDirectory()) {
-          let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-          process.stderr.on("data", (err) => {
-            if (err) {
-              reject(new Error("PYTHON_RUN_ERROR"));
-            } else {
-              resolve();
-            }
-          });
-        } else {
-          fs.mkdir(outputDir, () => {
-            let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-            process.stderr.on("data", (err) => {
-            if (err) {
-              reject(new Error("PYTHON_RUN_ERROR"));
-            } else {
-              resolve();
-            }
-          });
-        }
 
+      let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+      process.stderr.on("data", (err) => {
+        if (err) {
+          reject(new Error("PYTHON_RUN_ERROR"));
+        } else {
+          resolve();
+        }
       });
     });
   }
