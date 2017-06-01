@@ -63,6 +63,7 @@ export class TiffTilerService {
         console.log("create folder");
       }
     }
+    return;
   }
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, maxZoom: number): Promise<void> {
