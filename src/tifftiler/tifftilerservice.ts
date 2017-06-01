@@ -43,13 +43,11 @@ export class TiffTilerService {
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
         { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" }]
-      TiffTilerService.createFolder(outputTilesDir, waveArray).then(() => {
-        console.log("in");
-        for (let imageInfo of imagesInfos) {
-          TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
-        }
-      });
+      await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
+      for (let imageInfo of imagesInfos) {
+        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
+      }
     } catch (err) {
       throw err;
     }
@@ -60,14 +58,14 @@ export class TiffTilerService {
       for (let wave of waveArray) {
         let outputDir: string = outputTilesDir + wave;
         console.log(outputDir);
-        let stats: fs.Stats = fs.statSync(outputDir);
-        console.log(stats);
-        if (stats && stats.isDirectory()) {
-          console.log("exist");
-        } else {
-          fs.mkdirSync(outputDir);
-          console.log("create folder");
-        }
+        fs.stat(outputDir, (err, stats) => {
+          if (stats) {
+            console.log("exist");
+          }else {
+            fs.mkdirSync(outputDir);
+            console.log("create folder");
+          }
+        });
       }
       resolve();
     });
