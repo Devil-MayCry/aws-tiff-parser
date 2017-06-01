@@ -41,52 +41,76 @@ export class TiffTilerService {
       let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-      await TiffTilerService.createFolder(outputTilesDir, waveArray);
+      const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
+      // await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
       for (let imageInfo of imagesInfos) {
-        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
+        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
       }
     } catch (err) {
       throw err;
     }
   }
 
-  static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      async.each(waveArray, (wave, done) => {
-        let outputDir: string = outputTilesDir + wave;
-        fs.stat(outputDir, (err, stats) => {
-          if (stats) {
-            done();
-          }else {
-            fs.mkdirSync(outputDir);
-            done();
-          }
-        });
-      }, (err: Error) => {
-        if (err) reject(err);
-        else {
-          resolve();
-        }
-      });
-    });
-  }
+  // static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
+  //   return new Promise<void>((resolve, reject) => {
+  //     async.each(waveArray, (wave, done) => {
+  //       let outputDir: string = outputTilesDir + wave;
+  //       fs.stat(outputDir, (err, stats) => {
+  //         if (stats) {
+  //           done();
+  //         }else {
+  //           fs.mkdirSync(outputDir);
+  //           done();
+  //         }
+  //       });
+  //     }, (err: Error) => {
+  //       if (err) reject(err);
+  //       else {
+  //         resolve();
+  //       }
+  //     });
+  //   });
+  // }
 
-  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, maxZoom: number): Promise<void> {
+  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, inputTilesDir: string, maxZoom: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let pythonCodePath: string = path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 
+      // 分解图片路径，获取年月日，作为输出路径
+
       let filePath: string = tiffImagePath.filePath;
-      let outputDir: string = outputTilesDir + tiffImagePath.waveType;
       console.log(filePath);
+
+      let dirPath: string = filePath.replace(inputTilesDir, "");
+      let dirArray: string[] = dirPath.split("/");
+      let timePath = dirArray[3] + "/" + dirArray[4] + "/" + dirArray[5] + "/";
+      let outputDir: string = outputTilesDir  + timePath + tiffImagePath.waveType;
       console.log(outputDir);
 
-      let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-      process.stderr.on("data", (err) => {
-        if (err) {
-          reject(new Error("PYTHON_RUN_ERROR"));
+      fs.stat(outputDir, (err, stats) => {
+        if (stats) {
+          console.log("exist");
+          let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+          process.stderr.on("data", (err) => {
+            if (err) {
+              reject(new Error("PYTHON_RUN_ERROR"));
+            } else {
+              resolve();
+            }
+          });
         } else {
-          resolve();
+          console.log("no exist");
+          fs.mkdir(outputDir, () => {
+            let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+            process.stderr.on("data", (err) => {
+              if (err) {
+                reject(new Error("PYTHON_RUN_ERROR"));
+              } else {
+                resolve();
+              }
+            });
+          });
         }
       });
     });
