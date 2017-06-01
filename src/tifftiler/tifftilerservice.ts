@@ -38,10 +38,11 @@ export class TiffTilerService {
    */
   static async startTransformImageToTiff(year: number, month: number, maxZoom: number, waveArray: string[]): Promise<void> {
     try {
-      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
+      // let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-
+      let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
+        { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" }]
       await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
       for (let imageInfo of imagesInfos) {
@@ -53,17 +54,21 @@ export class TiffTilerService {
   }
 
   static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
-    for (let wave of waveArray) {
-      let outputDir: string = outputTilesDir + wave;
-      let stats: fs.Stats = fs.statSync(outputDir);
-      if (stats && stats.isDirectory()) {
-        console.log("exist");
-      } else {
-        fs.mkdirSync(outputDir);
-        console.log("create folder");
+    return new Promise<void>((resolve, reject) => {
+      for (let wave of waveArray) {
+        let outputDir: string = outputTilesDir + wave;
+        console.log(outputDir);
+        let stats: fs.Stats = fs.statSync(outputDir);
+        console.log(stats);
+        if (stats && stats.isDirectory()) {
+          console.log("exist");
+        } else {
+          fs.mkdirSync(outputDir);
+          console.log("create folder");
+        }
       }
-    }
-    return;
+      resolve();
+    });
   }
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, maxZoom: number): Promise<void> {
