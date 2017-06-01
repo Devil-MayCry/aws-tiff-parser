@@ -48,8 +48,9 @@ export class TiffTilerService {
       // await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
       async.eachLimit(imagesInfos, 2, (imageInfo, done) => {
-        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
-        done();
+        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
+          done();
+        });
       }, (err: Error) => {
         if (err) {
           console.log(err);
