@@ -58,7 +58,7 @@ console.log(pythonCodePath);
         process.stderr.on("data", (err) => {
           if (err) {
             console.log("error");
-            console.log(err);
+            console.log(err.toString());
           } else {
             console.log("no error");
           }
