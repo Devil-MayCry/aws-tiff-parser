@@ -54,6 +54,21 @@ export class TiffTilerService {
   static async testPython(): Promise<void> {
       let pythonCodePath: string = path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 console.log(pythonCodePath);
+
+ let  process2: child_process.ChildProcess = child_process.spawn("which python");
+
+        process2.stderr.on("data", (err) => {
+          if (err) {
+            console.log(err.toString());
+          } else {
+          }
+        });
+        process2.stdout.on("data", function (data){
+          console.log(" python path");
+          console.log(data);
+// Do something with the data returned from python script
+      });
+
         let  process: child_process.ChildProcess = child_process.spawn("python", [pythonCodePath, "-z", `0-6`, "/mountdata/s3-sentinel-2/tiles/56/M/LA/2017/5/1/0/B02.jp2", "/mountdata/s3-gagobucket/tiles/B01/"]);
         process.stderr.on("data", (err) => {
           if (err) {
@@ -68,15 +83,6 @@ console.log(pythonCodePath);
           console.log(data);
 // Do something with the data returned from python script
       });
-// const exec = child_process.exec;
-// exec(`python ${pythonCodePath} -z 0-6 /mountdata/s3-sentinel-2/tiles/56/M/LA/2017/5/1/0/B02.jp2 /mountdata/s3-gagobucket/tiles/B01/`, (error, stdout, stderr) => {
-//   if (error) {
-//     console.error(`exec error: ${error}`);
-//     return;
-//   }
-//   console.log(`stdout: ${stdout}`);
-//   console.log(`stderr: ${stderr}`);
-// });
   }
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, maxZoom: number): Promise<void> {
