@@ -38,43 +38,53 @@ export class TiffTilerService {
    */
   static async startTransformImageToTiff(year: number, month: number, maxZoom: number, waveArray: string[]): Promise<void> {
     try {
-      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
-      // let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
-      //   { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" }]
+      // let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, waveArray);
+      let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
+         { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" }]
 
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
       // await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
-      for (let imageInfo of imagesInfos) {
+      async.eachLimit(imagesInfos, 20, (imageInfo, done) => {
         TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
-      }
+        done();
+      }, (err: Error) => {
+        if (err) {
+          console.log(err);
+          throw(err);
+        }
+      });
+
+      // for (let imageInfo of imagesInfos) {
+      //   TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
+      // }
     } catch (err) {
       throw err;
     }
   }
 
-  // static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
-  //   return new Promise<void>((resolve, reject) => {
-  //     async.each(waveArray, (wave, done) => {
-  //       let outputDir: string = outputTilesDir + wave;
-  //       fs.stat(outputDir, (err, stats) => {
-  //         if (stats) {
-  //           done();
-  //         }else {
-  //           fs.mkdirSync(outputDir);
-  //           done();
-  //         }
-  //       });
-  //     }, (err: Error) => {
-  //       if (err) reject(err);
-  //       else {
-  //         resolve();
-  //       }
-  //     });
-  //   });
-  // }
+  static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      async.each(waveArray, (wave, done) => {
+        let outputDir: string = outputTilesDir + wave;
+        fs.stat(outputDir, (err, stats) => {
+          if (stats) {
+            done();
+          }else {
+            fs.mkdirSync(outputDir);
+            done();
+          }
+        });
+      }, (err: Error) => {
+        if (err) reject(err);
+        else {
+          resolve();
+        }
+      });
+    });
+  }
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, inputTilesDir: string, maxZoom: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
