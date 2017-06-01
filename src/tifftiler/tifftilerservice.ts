@@ -69,18 +69,26 @@ export class TiffTilerService {
       console.log(outputDir);
       fs.stat(outputDir, (err: Error, stats: fs.Stats) => {
         if (stats && stats.isDirectory()) {
-          // do nothing
+          let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+          process.stderr.on("data", (err) => {
+            if (err) {
+              reject(new Error("PYTHON_RUN_ERROR"));
+            } else {
+              resolve();
+            }
+          });
         } else {
-          fs.mkdirSync(outputDir);
+          fs.mkdir(outputDir, () => {
+            let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+            process.stderr.on("data", (err) => {
+            if (err) {
+              reject(new Error("PYTHON_RUN_ERROR"));
+            } else {
+              resolve();
+            }
+          });
         }
-        let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-        process.stderr.on("data", (err) => {
-          if (err) {
-            reject(new Error("PYTHON_RUN_ERROR"));
-          } else {
-            resolve();
-          }
-        });
+
       });
     });
   }
