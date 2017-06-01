@@ -43,11 +43,13 @@ export class TiffTilerService {
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
         { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" }]
-      await TiffTilerService.createFolder(outputTilesDir, waveArray);
+      TiffTilerService.createFolder(outputTilesDir, waveArray).then(() => {
+        console.log("in");
+        for (let imageInfo of imagesInfos) {
+          TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
+        }
+      });
 
-      for (let imageInfo of imagesInfos) {
-        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, maxZoom);
-      }
     } catch (err) {
       throw err;
     }
