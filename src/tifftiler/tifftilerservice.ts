@@ -57,7 +57,7 @@ export class TiffTilerService {
 
       // await TiffTilerService.createFolder(outputTilesDir, waveArray);
       console.log("all images end");
-      async.eachLimit(imagesInfos, 5, (imageInfo, done) => {
+      async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
         TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
           done();
         });
@@ -112,29 +112,52 @@ export class TiffTilerService {
 
       fs.stat(outputDir, (err, stats) => {
         if (stats) {
-          let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-          process.stderr.on("data", (err) => {
-            if (err) {
+
+          const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
+            if (error) {
               console.log(err.toString());
               reject(new Error("PYTHON_RUN_ERROR"));
-            }
-          });
-          process.on("close", (code) => {
-            resolve();
-          });
-        } else {
-          fs.mkdir(outputDir, () => {
-            let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-            process.stderr.on("data", (err) => {
-              if (err) {
-                console.log(err.toString())
-                reject(new Error("PYTHON_RUN_ERROR"));
-              }
-            });
-            process.on("close", (code) => {
+            } else {
               console.log("split..end.");
               resolve();
+            }
+            console.log(stdout);
+          });
+
+          // let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+          // process.stderr.on("data", (err) => {
+          //   if (err) {
+          //     console.log(err.toString());
+          //     reject(new Error("PYTHON_RUN_ERROR"));
+          //   }
+          // });
+          // process.on("close", (code) => {
+          //   console.log("split..end.");
+          //   resolve();
+          // });
+        } else {
+          fs.mkdir(outputDir, () => {
+
+            const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
+              if (error) {
+                console.log(err.toString());
+                reject(new Error("PYTHON_RUN_ERROR"));
+              } else {
+                console.log("split..end.");
+                resolve();
+              }
             });
+            // let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
+            // process.stderr.on("data", (err) => {
+            //   if (err) {
+            //     console.log(err.toString())
+            //     reject(new Error("PYTHON_RUN_ERROR"));
+            //   }
+            // });
+            // process.on("close", (code) => {
+            //   console.log("split..end.");
+            //   resolve();
+            // });
           });
         }
       });
