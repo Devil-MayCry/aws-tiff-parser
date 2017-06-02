@@ -97,17 +97,17 @@ export class TiffTilerService {
       // 分解图片路径，获取年月日，作为输出路径
 
       let filePath: string = tiffImagePath.filePath;
+      console.log("start split...");
+
       console.log(filePath);
 
       let dirPath: string = filePath.replace(inputTilesDir, "");
       let dirArray: string[] = dirPath.split("/");
       let timePath = dirArray[3] + "/" + dirArray[4] + "/" + dirArray[5] + "/";
       let outputDir: string = outputTilesDir  + timePath + tiffImagePath.waveType;
-      console.log(outputDir);
 
       fs.stat(outputDir, (err, stats) => {
         if (stats) {
-          console.log("exist");
           let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
           process.stderr.on("data", (err) => {
             if (err) {
@@ -118,7 +118,6 @@ export class TiffTilerService {
             resolve();
           });
         } else {
-          console.log("no exist");
           fs.mkdir(outputDir, () => {
             let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
             process.stderr.on("data", (err) => {
@@ -127,6 +126,7 @@ export class TiffTilerService {
               }
             });
             process.on("close", (code) => {
+              console.log("split..end.");
               resolve();
             });
           });
@@ -169,7 +169,6 @@ export class TiffTilerService {
       walker.on("file", function (root: any, fileStats: any, next: any) {
         let fileName: string =  fileStats.name;
         if (fileName.endsWith(".jp2")) {
-          console.log(fileName);
           let waveNameInArray: string[] = fileName.split(".");
           let wave: string = waveNameInArray[0];
           if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
