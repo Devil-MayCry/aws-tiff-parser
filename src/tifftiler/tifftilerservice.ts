@@ -365,8 +365,12 @@ export class TiffTilerService {
           }
         });
       }, (err: Error, values: string[]) => {
-        if (err) throw err;
-        resolve(imagePathArray);
+        if (err) {
+          console.log(err);
+          resolve([]);
+        }else {
+          resolve(imagePathArray);
+        }
       });
     });
   }
