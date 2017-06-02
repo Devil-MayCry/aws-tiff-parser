@@ -179,10 +179,12 @@ export class TiffTilerService {
       });
 
       walker.on("errors", function (root: any, nodeStatsArray: any, next: any) {
+        console.log("walk error");
         next();
       });
 
       walker.on("end", function () {
+        console.log("walk end");
         resolve(filePathArray);
       });
     });
@@ -354,11 +356,11 @@ export class TiffTilerService {
           if (stats && stats.isDirectory()) {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
               imagePathArray.push(...data);
-              console.log("done");
+              console.log("exist, done");
               done();
             });
           } else {
-            console.log("done");
+            console.log("no exist, done");
             done();
           }
         });
