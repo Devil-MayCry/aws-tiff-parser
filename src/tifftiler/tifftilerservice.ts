@@ -181,7 +181,11 @@ export class TiffTilerService {
             TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR, maxZoom).then(() => {
               next();
             });
+          } else {
+            next();
           }
+        } else {
+          next();
         }
       });
 
