@@ -169,6 +169,7 @@ export class TiffTilerService {
       walker.on("file", function (root: any, fileStats: any, next: any) {
         let fileName: string =  fileStats.name;
         if (fileName.endsWith(".jp2")) {
+          console.log(fileName);
           let waveNameInArray: string[] = fileName.split(".");
           let wave: string = waveNameInArray[0];
           if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
@@ -350,17 +351,21 @@ export class TiffTilerService {
   private static async getAllSpecifyImagesPath_(squareFolderPathArray: string[], year: number, month: number, waveArray: string[]): Promise<WaveFile[]> {
     return new Promise<WaveFile[]>((resolve, reject) => {
       let imagePathArray: WaveFile[] = [];
-      async.mapLimit(squareFolderPathArray, 100, (eachDir, done) => {
+      let i = 0;
+      async.mapLimit(squareFolderPathArray, 300, (eachDir, done) => {
+      console.log(i++);
         let folderPath: string = eachDir + year + "/" + month;
         fs.stat(folderPath, (err: Error, stats: fs.Stats) => {
+            console.log(folderPath);
           if (stats && stats.isDirectory()) {
+              console.log("exist, done");
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
               imagePathArray.push(...data);
-              console.log("exist, done");
               done();
+            }).catch((err)=>{
+              console.log("catch + "+ err);
             });
           } else {
-            console.log(folderPath);
             console.log("no exist, done");
             done();
           }
@@ -370,6 +375,7 @@ export class TiffTilerService {
           console.log(err);
           resolve([]);
         }else {
+          console.log("finish");
           resolve(imagePathArray);
         }
       });
