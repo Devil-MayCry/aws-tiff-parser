@@ -56,8 +56,8 @@ export class TiffTilerService {
 
 
       // await TiffTilerService.createFolder(outputTilesDir, waveArray);
-
-      async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
+      console.log("all images end");
+      async.eachLimit(imagesInfos, 5, (imageInfo, done) => {
         TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
           done();
         });
@@ -115,6 +115,7 @@ export class TiffTilerService {
           let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
           process.stderr.on("data", (err) => {
             if (err) {
+              console.log(err.toString());
               reject(new Error("PYTHON_RUN_ERROR"));
             }
           });
@@ -150,7 +151,8 @@ export class TiffTilerService {
   static async getSplitedImagesPaths(year: number, month: number, day: number, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
     let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
     console.log(allSquareFoldersPathInS3);
-    return await TiffTilerService.getAllSpecifyImagesPath_(allSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
+    let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
+    return allSpecifyImagesPath;
   }
 
   static async getImageFiles_(rootDir: string, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
@@ -409,10 +411,11 @@ export class TiffTilerService {
           }
         });
       }, (err: Error, values: string[]) => {
-        console.log("finsih");
         if (err) {
+          console.log("err");
           resolve([]);
         }else {
+          console.log("finsih");
           console.log(imagePathArray);
           resolve(imagePathArray);
         }
