@@ -115,7 +115,7 @@ export class TiffTilerService {
 
           const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
             if (error) {
-              console.log(err.toString());
+              console.log(error.toString());
               reject(new Error("PYTHON_RUN_ERROR"));
             } else {
               console.log("split..end.");
