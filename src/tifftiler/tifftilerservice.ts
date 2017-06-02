@@ -352,8 +352,7 @@ export class TiffTilerService {
     return new Promise<WaveFile[]>((resolve, reject) => {
       let imagePathArray: WaveFile[] = [];
       let i = 0;
-      async.mapLimit(squareFolderPathArray, 300, (eachDir, done) => {
-      console.log(i++);
+      async.map(squareFolderPathArray, (eachDir, done) => {
         let folderPath: string = eachDir + year + "/" + month;
         fs.stat(folderPath, (err: Error, stats: fs.Stats) => {
             console.log(folderPath);
@@ -362,8 +361,6 @@ export class TiffTilerService {
             TiffTilerService.getAllImageFilesByWalkLibary_(folderPath, waveArray).then((data: WaveFile[]) => {
               imagePathArray.push(...data);
               done();
-            }).catch((err)=>{
-              console.log("catch + "+ err);
             });
           } else {
             console.log("no exist, done");
@@ -372,7 +369,6 @@ export class TiffTilerService {
         });
       }, (err: Error, values: string[]) => {
         if (err) {
-          console.log(err);
           resolve([]);
         }else {
           console.log("finish");
