@@ -7,6 +7,6 @@ npm install --registry=http://npmjs.gagogroup.cn
 
 gulp ts
 
-pm2-docker start "dist/app.js" -i 0
+pm2-docker start "dist/app.js" -i 1
 
 echo "end delpoying"
