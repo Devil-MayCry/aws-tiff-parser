@@ -360,6 +360,7 @@ export class TiffTilerService {
               done();
             });
           } else {
+            console.log(folderPath);
             console.log("no exist, done");
             done();
           }
