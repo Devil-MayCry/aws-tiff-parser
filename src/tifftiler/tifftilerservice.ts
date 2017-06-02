@@ -50,7 +50,7 @@ export class TiffTilerService {
       const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
       // await TiffTilerService.createFolder(outputTilesDir, waveArray);
 
-      async.eachLimit(imagesInfos, 2, (imageInfo, done) => {
+      async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
         TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
           done();
         });
@@ -173,6 +173,7 @@ export class TiffTilerService {
           let wave: string = waveNameInArray[0];
           if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
             filePathArray.push({filePath: root + "/" + fileName, waveType: wave});
+            console.log({filePath: root + "/" + fileName, waveType: wave});
           }
         }
         next();
@@ -274,7 +275,7 @@ export class TiffTilerService {
     return new Promise<string[]>((resolve, reject) => {
       fs.readdir(parentPath, (err: NodeJS.ErrnoException, dirNames: string[]) => {
         if (!err) {
-          async.mapLimit(dirNames, 100, (eachDir, done) => {
+          async.map(dirNames, (eachDir, done) => {
             fs.stat(parentPath + "/" + eachDir, (err: Error, stats: fs.Stats) => {
               if (stats.isDirectory()) {
                 done(null, eachDir);
@@ -370,12 +371,13 @@ export class TiffTilerService {
           }
         });
       }, (err: Error, values: string[]) => {
-          console.log("finsih");
-        if (err) {
-          resolve([]);
-        }else {
-          resolve(imagePathArray);
-        }
+        resolve(imagePathArray);
+        console.log("finsih");
+        // if (err) {
+        //   resolve();
+        // }else {
+        //   resolve(imagePathArray);
+        // }
       });
     });
   }
