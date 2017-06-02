@@ -400,7 +400,7 @@ export class TiffTilerService {
           if (stats && stats.isDirectory()) {
               console.log("exist, done");
             TiffTilerService.getImageFiles_(folderPath, waveArray, maxZoom).then((data: any) => {
-              imagePathArray.push(data);
+              imagePathArray.push(...data);
               done();
             });
           } else {
