@@ -12,8 +12,6 @@ import * as child_process from "child_process";
 
 import{RedisHelper} from "../db/redishelper";
 
-const walk = require("walk")
-
 interface WaveFile {
   filePath: string;
   waveType: string;
