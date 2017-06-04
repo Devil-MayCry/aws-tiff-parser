@@ -48,25 +48,22 @@ export class TiffTilerService {
       const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
 
       let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, day, waveArray, maxZoom);
-      // let imagesInfos: WaveFile[] = [{ "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B01.jp2",  "waveType": "B01" },
-      //    { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/KT/2017/5/1/0/B02.jp2",    "waveType": "B02" },
-      //    { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/LC/2017/5/14/0/B02.jp2",    "waveType": "B02" },
-      //    { "filePath": "/mountdata/s3-sentinel-2/tiles/56/M/LC/2017/5/14/0/B01.jp2",    "waveType": "B01" },
-      //    ]
-
-
-      // await TiffTilerService.createFolder(outputTilesDir, waveArray);
       console.log("all images end");
-      async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
-        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
-          done();
-        });
-      }, (err: Error) => {
-        if (err) {
-          console.log(err);
-          throw(err);
-        }
-      });
+
+      // async.eachLimit(c, 3, (imageInfo, done) => {
+      //   TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
+      //     done();
+      //   });
+      // }, (err: Error) => {
+      //   if (err) {
+      //     console.log(err);
+      //     throw(err);
+      //   }
+      // });
+
+      for (let imageInfo of imagesInfos){
+        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
+      }
 
     } catch (err) {
       throw err;
@@ -116,48 +113,81 @@ export class TiffTilerService {
           const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
             if (error) {
               console.log(error.toString());
-              reject(new Error("PYTHON_RUN_ERROR"));
+              console.log("try again");
+
+              // s3-sentinel-2 is lost connection, mount again
+              const exec = child_process.exec;
+              const mountS3: string =
+            `export PATH=$PATH:/usr/local/bin/
+
+            umount /mountdata/s3-sentinel-2
+
+            s3fs sentinel-s2-l1c /mountdata/s3-sentinel-2 -o passwd_file=/home/ec2-user/.passwd-s3fs -o endpoint=eu-central-1`;
+
+              exec(mountS3, (error, stdout, stderr) => {
+                if (error) {
+                  console.error(`exec error: ${error}`);
+                  resolve();
+                } else {
+                  const processAgain: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
+                    if (error) {
+                      console.log("error again");
+                      console.log(error.toString());
+                      resolve();
+                      // reject(new Error("PYTHON_RUN_ERROR"));
+                    } else {
+                      console.log("split..end.");
+                      resolve();
+                    }
+                  });
+                }
+              });
+              // reject(new Error("PYTHON_RUN_ERROR"));
             } else {
               console.log("split..end.");
               resolve();
             }
-            console.log(stdout);
           });
-
-          // let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-          // process.stderr.on("data", (err) => {
-          //   if (err) {
-          //     console.log(err.toString());
-          //     reject(new Error("PYTHON_RUN_ERROR"));
-          //   }
-          // });
-          // process.on("close", (code) => {
-          //   console.log("split..end.");
-          //   resolve();
-          // });
         } else {
           fs.mkdir(outputDir, () => {
-
             const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
               if (error) {
-                console.log(err.toString());
-                reject(new Error("PYTHON_RUN_ERROR"));
+                console.log(error.toString());
+                console.log("try again");
+
+                // s3-sentinel-2 is lost connection, mount again
+                const exec = child_process.exec;
+                const mountS3: string =
+              `export PATH=$PATH:/usr/local/bin/
+
+              umount /mountdata/s3-sentinel-2
+
+              s3fs sentinel-s2-l1c /mountdata/s3-sentinel-2 -o passwd_file=/home/ec2-user/.passwd-s3fs -o endpoint=eu-central-1`;
+
+                exec(mountS3, (error, stdout, stderr) => {
+                  if (error) {
+                    console.error(`exec error: ${error}`);
+                    resolve();
+                  } else {
+                    const processAgain: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
+                      if (error) {
+                        console.log("error again");
+                        console.log(error.toString());
+                        resolve();
+                        // reject(new Error("PYTHON_RUN_ERROR"));
+                      } else {
+                        console.log("split..end.");
+                        resolve();
+                      }
+                    });
+                  }
+                });
+                // reject(new Error("PYTHON_RUN_ERROR"));
               } else {
                 console.log("split..end.");
                 resolve();
               }
             });
-            // let  process: child_process.ChildProcess = child_process.spawn("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir]);
-            // process.stderr.on("data", (err) => {
-            //   if (err) {
-            //     console.log(err.toString())
-            //     reject(new Error("PYTHON_RUN_ERROR"));
-            //   }
-            // });
-            // process.on("close", (code) => {
-            //   console.log("split..end.");
-            //   resolve();
-            // });
           });
         }
       });
@@ -172,9 +202,10 @@ export class TiffTilerService {
    * @memberOf TiffTilerService
    */
   static async getSplitedImagesPaths(year: number, month: number, day: number, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
-    let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
-    console.log(allSquareFoldersPathInS3);
-    let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
+    // let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
+    let allChinaSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
+    console.log(allChinaSquareFoldersPathInS3);
+    let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allChinaSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
     return allSpecifyImagesPath;
   }
 
@@ -188,9 +219,6 @@ export class TiffTilerService {
             let wave: string = waveNameInArray[0];
             if (waveArray.indexOf(wave) !== -1) {
               let imageInfo: WaveFile = {filePath: rootDir + "/" + fileName, waveType: wave};
-              // TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR, maxZoom).then(() => {
-              //   done();
-              // });
               allImages.push(imageInfo);
               done();
             } else {
@@ -210,52 +238,6 @@ export class TiffTilerService {
       });
     });
   }
- 
-  /**
-   * find All jp2 files paths in a folder
-   *
-   * @private
-   * @static
-   * @returns {Promise<string[]>}
-   *
-   * @memberOf TiffTilerService
-   */
-  // private static async getAllImageFilesByWalkLibary_(rootDir: string, waveArray: string[], maxZoom: number): Promise<void> {
-  //   return new Promise<void>((resolve, reject) => {
-
-  //     let filePathArray: WaveFile[] = [];
-
-  //     const walker = walk.walk(rootDir);
-
-  //     walker.on("file", function (root: any, fileStats: any, next: any) {
-  //       let fileName: string =  fileStats.name;
-  //       if (fileName.endsWith(".jp2")) {
-  //         let waveNameInArray: string[] = fileName.split(".");
-  //         let wave: string = waveNameInArray[0];
-  //         if (waveArray.indexOf(wave) !== -1 && root.indexOf("preview") === -1) {
-  //           let imageInfo: WaveFile = {filePath: root + "/" + fileName, waveType: wave};
-  //           TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR, maxZoom).then(() => {
-  //             next();
-  //           });
-  //         } else {
-  //           next();
-  //         }
-  //       } else {
-  //         next();
-  //       }
-  //     });
-
-  //     walker.on("errors", function (root: any, nodeStatsArray: any, next: any) {
-  //       console.log("walk error");
-  //       next();
-  //     });
-
-  //     walker.on("end", function () {
-  //       console.log("walk end");
-  //       resolve();
-  //     });
-  //   });
-  // }
 
   /**
    * The files folder in sentinel-2 s3 is tiles/[UTM code]/latitude band/square/[year]/[month]/[day]/[sequence]/DATA
@@ -279,12 +261,14 @@ export class TiffTilerService {
       const config: any = require("../../config/project.config.json");
       const outPutTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       let fileSavedAllSquareFoldersPath: string = outPutTilesDir + "allSquareFolderPaths.txt";
+      let fileSavedAllChinaSquareFoldersPath: string = outPutTilesDir + "allChinaSquareFolderPaths.txt";
 
       try {
         let allSquareFoldersPathInS3: string[] = [];
 
         // If the file is exist
-        fs.accessSync(fileSavedAllSquareFoldersPath);
+        // fs.accessSync(fileSavedAllSquareFoldersPath);
+        fs.accessSync( fileSavedAllChinaSquareFoldersPath);
 
         let lineReader: readline.ReadLine = readline.createInterface({
           input: fs.createReadStream(fileSavedAllSquareFoldersPath)
@@ -297,11 +281,38 @@ export class TiffTilerService {
         });
 
       } catch (err) {
-        TiffTilerService.readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath).then((allSquareFoldersPathInS3: string[]) =>{
+        // TiffTilerService.readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath).then((allSquareFoldersPathInS3: string[]) => {
+        //   resolve(allSquareFoldersPathInS3);
+        // });
+        TiffTilerService.readToGetChinaSquareFoldersPathInS3_(fileSavedAllChinaSquareFoldersPath).then((allSquareFoldersPathInS3: string[]) => {
           resolve(allSquareFoldersPathInS3);
         });
       }
     });
+  }
+
+  private static async readToGetChinaSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath: string): Promise<string[]> {
+        const config: any = require("../../config/project.config.json");
+    const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
+    const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllSquareFoldersPath);
+
+    let allSquareFoldersPathInS3: string[] = [];
+
+    let utmCodeFolderNameArray: string[] = ["48", "49", "50", "51", "52", "53", "54", "55", "56"];
+    let latitudeBandFolderNameArray: string[] = ["T", "S", "R", "Q"];
+
+    for (let eachUtmCodeFolderName of utmCodeFolderNameArray) {
+      for (let eachLatitudeBandFolderName of latitudeBandFolderNameArray) {
+        let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
+        for (let eachName of squareFolderNameArray) {
+          allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
+          console.log(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
+          stream.write(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/" + `\n`);
+        }
+      }
+    }
+    stream.end();
+    return allSquareFoldersPathInS3;
   }
 
   private static async readToGetAllSquareFoldersPathInS3_(fileSavedAllSquareFoldersPath: string): Promise<string[]> {
