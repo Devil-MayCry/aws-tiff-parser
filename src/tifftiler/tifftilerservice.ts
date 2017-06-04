@@ -10,6 +10,8 @@ import * as PythonShell from "python-shell";
 import * as async from "async";
 import * as child_process from "child_process";
 
+import{RedisHelper} from "../db/redishelper";
+
 const walk = require("walk")
 
 interface WaveFile {
@@ -50,6 +52,9 @@ export class TiffTilerService {
 
       let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, day, waveArray, maxZoom);
 
+      await RedisHelper.getInstance().saveImagesPathInRedis(imagesInfos);
+
+      // Write file path in file for emergency
       let fileSavedAllImagePath: string = outputTilesDir + "allImagePaths.txt";
 
       const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllImagePath);
@@ -59,20 +64,34 @@ export class TiffTilerService {
       }
       console.log("all images end");
       stream.end();
-        async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
-          TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
-            done();
-          });
-        }, (err: Error) => {
-          if (err) {
-            console.log(err);
-            throw(err);
-          }
-        });
 
-      // for (let imageInfo of imagesInfos){
-      //   await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
-      // }
+      while (1) {
+        let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
+        console.log("read");
+        console.log(imageInfoInString);
+        if (imageInfoInString === null) {
+          break;
+        } else {
+          let imageInfo: any = JSON.parse(imageInfoInString);
+          console.log(imageInfo);
+          await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
+          fs.unlinkSync(fileSavedAllImagePath);
+        }
+      }
+
+
+      // async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
+      //   TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
+      //     done();
+      //   });
+      // }, (err: Error) => {
+      //   if (err) {
+      //     console.log(err);
+      //     throw(err);
+      //   } else {
+      //     fs.unlinkSync(fileSavedAllImagePath);
+      //   }
+      // });
 
     } catch (err) {
       throw err;
@@ -141,7 +160,18 @@ export class TiffTilerService {
    */
   static async getSplitedImagesPaths(year: number, month: number, day: number, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
     // let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
-    let allChinaSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
+
+
+    // let allChinaSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
+    let allChinaSquareFoldersPathInS3: string[] = ["/mountdata/s3-sentinel-2/tiles/48/T/TK/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/TL/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/TM/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UK/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UL/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UM/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UN/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UP/",
+                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UQ/"];
     console.log(allChinaSquareFoldersPathInS3);
     let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allChinaSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
     return allSpecifyImagesPath;
