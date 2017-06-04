@@ -4,6 +4,6 @@
     "outputTilesDir": "/mountdata/s3-gagobucket/tiles/"
   },
   "redis": {
-    "host": "localhost"
+    "host": "172.31.10.202"
   }
 }
