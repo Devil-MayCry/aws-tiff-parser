@@ -271,7 +271,7 @@ export class TiffTilerService {
         fs.accessSync( fileSavedAllChinaSquareFoldersPath);
 
         let lineReader: readline.ReadLine = readline.createInterface({
-          input: fs.createReadStream(fileSavedAllSquareFoldersPath)
+          input: fs.createReadStream(fileSavedAllChinaSquareFoldersPath)
         });
 
         lineReader.on("line", (line: any) => {
