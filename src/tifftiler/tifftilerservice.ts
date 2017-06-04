@@ -46,49 +46,37 @@ export class TiffTilerService {
       const config: any = require("../../config/project.config.json");
       const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
       const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
+      const localTempDir: string = outputTilesDir + "temp/";
 
       let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, day, waveArray, maxZoom);
+
+      let fileSavedAllImagePath: string = outputTilesDir + "allImagePaths.txt";
+
+      const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllImagePath);
+
+      for (let imageInfo of imagesInfos) {
+        stream.write(imageInfo.filePath + `\n`);
+      }
       console.log("all images end");
 
-      // async.eachLimit(c, 3, (imageInfo, done) => {
-      //   TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
-      //     done();
-      //   });
-      // }, (err: Error) => {
-      //   if (err) {
-      //     console.log(err);
-      //     throw(err);
-      //   }
-      // });
+      async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
+        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
+          done();
+        });
+      }, (err: Error) => {
+        if (err) {
+          console.log(err);
+          throw(err);
+        }
+      });
 
-      for (let imageInfo of imagesInfos){
-        await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
-      }
+      // for (let imageInfo of imagesInfos){
+      //   await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
+      // }
 
     } catch (err) {
       throw err;
     }
-  }
-
-  static async createFolder(outputTilesDir: string, waveArray: string[]): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      async.each(waveArray, (wave, done) => {
-        let outputDir: string = outputTilesDir + wave;
-        fs.stat(outputDir, (err, stats) => {
-          if (stats) {
-            done();
-          }else {
-            fs.mkdirSync(outputDir);
-            done();
-          }
-        });
-      }, (err: Error) => {
-        if (err) reject(err);
-        else {
-          resolve();
-        }
-      });
-    });
   }
 
   static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, inputTilesDir: string, maxZoom: number): Promise<void> {
@@ -98,6 +86,7 @@ export class TiffTilerService {
       // 分解图片路径，获取年月日，作为输出路径
 
       let filePath: string = tiffImagePath.filePath;
+      let tempDir: string = "/tmp";
       console.log("start split...");
 
       console.log(filePath);
@@ -107,87 +96,33 @@ export class TiffTilerService {
       let timePath = dirArray[3] + "/" + dirArray[4] + "/" + dirArray[5] + "/";
       let outputDir: string = outputTilesDir  + timePath + tiffImagePath.waveType;
 
-      fs.stat(outputDir, (err, stats) => {
-        if (stats) {
-
-          const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
-            if (error) {
-              console.log(error.toString());
-              console.log("try again");
-
-              // s3-sentinel-2 is lost connection, mount again
-              const exec = child_process.exec;
-              const mountS3: string =
-            `export PATH=$PATH:/usr/local/bin/
-
-            umount /mountdata/s3-sentinel-2
-
-            s3fs sentinel-s2-l1c /mountdata/s3-sentinel-2 -o passwd_file=/home/ec2-user/.passwd-s3fs -o endpoint=eu-central-1`;
-
-              exec(mountS3, (error, stdout, stderr) => {
+      child_process.exec(`cp ${tiffImagePath} ${tempDir}`, (error, stdout, stderr) => {
+        let tempFilePath: string = `/tmp/${tiffImagePath.waveType}.jp2`;
+        if (!error) {
+          fs.stat(outputDir, (err, stats) => {
+            if (stats) {
+              const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, tempFilePath, outputDir], (error, stdout, stderr) => {
                 if (error) {
-                  console.error(`exec error: ${error}`);
+                  console.log("error");
                   resolve();
                 } else {
-                  const processAgain: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
-                    if (error) {
-                      console.log("error again");
-                      console.log(error.toString());
-                      resolve();
-                      // reject(new Error("PYTHON_RUN_ERROR"));
-                    } else {
-                      console.log("split..end.");
-                      resolve();
-                    }
-                  });
+                  console.log("split..end.");
+                  resolve();
                 }
               });
-              // reject(new Error("PYTHON_RUN_ERROR"));
             } else {
-              console.log("split..end.");
-              resolve();
-            }
-          });
-        } else {
-          fs.mkdir(outputDir, () => {
-            const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
-              if (error) {
-                console.log(error.toString());
-                console.log("try again");
-
-                // s3-sentinel-2 is lost connection, mount again
-                const exec = child_process.exec;
-                const mountS3: string =
-              `export PATH=$PATH:/usr/local/bin/
-
-              umount /mountdata/s3-sentinel-2
-
-              s3fs sentinel-s2-l1c /mountdata/s3-sentinel-2 -o passwd_file=/home/ec2-user/.passwd-s3fs -o endpoint=eu-central-1`;
-
-                exec(mountS3, (error, stdout, stderr) => {
+              fs.mkdir(outputDir, () => {
+                const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, tempFilePath, outputDir], (error, stdout, stderr) => {
                   if (error) {
-                    console.error(`exec error: ${error}`);
+                    console.log("error");
                     resolve();
                   } else {
-                    const processAgain: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, filePath, outputDir], (error, stdout, stderr) => {
-                      if (error) {
-                        console.log("error again");
-                        console.log(error.toString());
-                        resolve();
-                        // reject(new Error("PYTHON_RUN_ERROR"));
-                      } else {
-                        console.log("split..end.");
-                        resolve();
-                      }
-                    });
+                    console.log("split..end.");
+                    resolve();
                   }
                 });
-                // reject(new Error("PYTHON_RUN_ERROR"));
-              } else {
-                console.log("split..end.");
-                resolve();
-              }
-            });
+              });
+            }
           });
         }
       });
