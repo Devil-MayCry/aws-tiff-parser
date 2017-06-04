@@ -56,6 +56,7 @@ export class TiffTilerService {
 
       for (let imageInfo of imagesInfos) {
         stream.write(imageInfo.filePath + `\n`);
+        console.log("11");
       }
       console.log("all images end");
 
@@ -96,7 +97,7 @@ export class TiffTilerService {
       let timePath = dirArray[3] + "/" + dirArray[4] + "/" + dirArray[5] + "/";
       let outputDir: string = outputTilesDir  + timePath + tiffImagePath.waveType;
 
-      child_process.exec(`cp ${tiffImagePath} ${tempDir}`, (error, stdout, stderr) => {
+      child_process.exec(`cp ${filePath} ${tempDir}`, (error, stdout, stderr) => {
         let tempFilePath: string = `/tmp/${tiffImagePath.waveType}.jp2`;
         if (!error) {
           fs.stat(outputDir, (err, stats) => {
