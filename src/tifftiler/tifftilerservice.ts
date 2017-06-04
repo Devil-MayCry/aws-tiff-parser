@@ -56,20 +56,19 @@ export class TiffTilerService {
 
       for (let imageInfo of imagesInfos) {
         stream.write(imageInfo.filePath + `\n`);
-        console.log("11");
       }
       console.log("all images end");
-
-      async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
-        TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
-          done();
+      stream.end();
+        async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
+          TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom).then(() => {
+            done();
+          });
+        }, (err: Error) => {
+          if (err) {
+            console.log(err);
+            throw(err);
+          }
         });
-      }, (err: Error) => {
-        if (err) {
-          console.log(err);
-          throw(err);
-        }
-      });
 
       // for (let imageInfo of imagesInfos){
       //   await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
@@ -96,9 +95,10 @@ export class TiffTilerService {
       let dirArray: string[] = dirPath.split("/");
       let timePath = dirArray[3] + "/" + dirArray[4] + "/" + dirArray[5] + "/";
       let outputDir: string = outputTilesDir  + timePath + tiffImagePath.waveType;
-
-      child_process.exec(`cp ${filePath} ${tempDir}`, (error, stdout, stderr) => {
-        let tempFilePath: string = `/tmp/${tiffImagePath.waveType}.jp2`;
+      let timestamp: number = new Date().getTime();
+      let copyAndRenameFile: string = `cp ${filePath} ${tempDir} \n  mv ${tempDir}/${tiffImagePath.waveType}.jp2 ${tempDir}/${timestamp}.jp2 `;
+      child_process.exec(copyAndRenameFile, (error, stdout, stderr) => {
+        let tempFilePath: string = `${tempDir}/${timestamp}.jp2`;
         if (!error) {
           fs.stat(outputDir, (err, stats) => {
             if (stats) {
@@ -108,6 +108,7 @@ export class TiffTilerService {
                   resolve();
                 } else {
                   console.log("split..end.");
+                  child_process.exec(`rm ${tempFilePath}`);
                   resolve();
                 }
               });
@@ -119,6 +120,7 @@ export class TiffTilerService {
                     resolve();
                   } else {
                     console.log("split..end.");
+                    child_process.exec(`rm ${tempFilePath}`);
                     resolve();
                   }
                 });
