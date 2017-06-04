@@ -303,10 +303,10 @@ export class TiffTilerService {
 
     for (let eachUtmCodeFolderName of utmCodeFolderNameArray) {
       for (let eachLatitudeBandFolderName of latitudeBandFolderNameArray) {
-        let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
+        let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
         if (squareFolderNameArray.length > 0) {
           for (let eachName of squareFolderNameArray) {
-            allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
+            allSquareFoldersPathInS3.push(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
             console.log(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
             stream.write(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/" + `\n`);
           }
@@ -331,7 +331,7 @@ export class TiffTilerService {
         let squareFolderNameArray: string[] = await TiffTilerService.getAllChildFolderName_(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName);
         if (squareFolderNameArray.length > 0) {
           for (let eachName of squareFolderNameArray) {
-              allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName);
+              allSquareFoldersPathInS3.push(inputTilesDir + "/" + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
               // console.log(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/");
               stream.write(inputTilesDir + eachUtmCodeFolderName + "/" + eachLatitudeBandFolderName + "/" + eachName + "/" + `\n`);
           }
