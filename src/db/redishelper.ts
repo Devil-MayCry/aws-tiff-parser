@@ -21,8 +21,8 @@ export class RedisHelper {
 
 
   constructor() {
-    console.log(`RedisHelper connects to ${this.redisHost}`);
     this.redisClient_ = redis.createClient(<any>{host: this.redisHost});
+    console.log(`RedisHelper connects to ${this.redisHost}`);
   }
 
   static getInstance(): RedisHelper {
@@ -44,13 +44,13 @@ export class RedisHelper {
     return new Promise<void>((resolve, reject) => {
       let multi = this.redisClient_.multi();
       for (let imageInfo of iamgesInfos) {
-          let imageInfoInString: string = `{filePath: ${imageInfo.filePath}, waveType:  ${imageInfo.waveType}}`;
+          let imageInfoInString: string = `{"filePath": "${imageInfo.filePath}", "waveType":  "${imageInfo.waveType}"}`;
           console.log(imageInfoInString);
-          console.log("save");
           multi.rpush("images_path", imageInfoInString);
+          console.log("save");
       }
 
-      multi.exec(function(errors, results) {
+      multi.exec(function(errors: Error, results: any) {
         if (errors) {
           console.log("insert redis fail");
           reject();
