@@ -160,16 +160,16 @@ export class TiffTilerService {
     // let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
 
 
-    // let allChinaSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
-    let allChinaSquareFoldersPathInS3: string[] = ["/mountdata/s3-sentinel-2/tiles/48/T/TK/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/TL/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/TM/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UK/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UL/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UM/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UN/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UP/",
-                                                    "/mountdata/s3-sentinel-2/tiles/48/T/UQ/"];
+    let allChinaSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
+    // let allChinaSquareFoldersPathInS3: string[] = ["/mountdata/s3-sentinel-2/tiles/48/T/TK/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/TL/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/TM/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UK/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UL/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UM/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UN/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UP/",
+    //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UQ/"];
     console.log(allChinaSquareFoldersPathInS3);
     let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allChinaSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
     return allSpecifyImagesPath;
