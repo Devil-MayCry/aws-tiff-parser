@@ -1,8 +1,17 @@
+// Copyright 2017 huteng (huteng@gagogroup.com). All rights reserved.,
+// Use of this source code is governed a license that can be found in the LICENSE file.
+
+import * as express from "express";
+
 import {TiffTilerService} from "./tifftiler/tifftilerservice";
 
+const app: express.Application = express();
+
+let betaRouter: express.Router = require("./routes/beta");
+
+app.use("/api/beta", betaRouter);
 
 
-TiffTilerService.saveImagePathInRedis(2017, 5, 16 , ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08"]);
+TiffTilerService.startTransformImageToTiff();
 
-// TiffTilerService.startTransformImageToTiff(8);
 console.log("Server start");

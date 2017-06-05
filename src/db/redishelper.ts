@@ -38,11 +38,11 @@ export class RedisHelper {
     return this.redisClient_;
   }
 
-  async saveImagesPathInRedis(iamgesInfos: WaveFile[]): Promise<void> {
+  async saveImagesPathInRedis(iamgesInfos: WaveFile[], zoom: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let multi = this.redisClient_.multi();
       for (let imageInfo of iamgesInfos) {
-          let imageInfoInString: string = `{"filePath": "${imageInfo.filePath}", "waveType":  "${imageInfo.waveType}"}`;
+          let imageInfoInString: string = `{"filePath": "${imageInfo.filePath}", "waveType":  "${imageInfo.waveType}", "zoom": "${zoom}"}`;
           console.log(imageInfoInString);
           multi.rpush("images_path", imageInfoInString);
           console.log("save");

@@ -32,18 +32,17 @@ const IN_PUT_TILES_DIR: string = config["sentinelImage"]["inputTilesDir"];
 
 export class TiffTilerService {
 
-  static async startTransformImageToTiff(maxZoom: number): Promise<void> {
+  static async startTransformImageToTiff(): Promise<void> {
       while (1) {
         let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
-        console.log("read");
         console.log(imageInfoInString);
         if (imageInfoInString === null) {
-          console.log("all image split finish");
-          break;
+          console.log("all image split finish, hold on for new task");
+          setTimeout(2000);
         } else {
           let imageInfo: any = JSON.parse(imageInfoInString);
           console.log(imageInfo);
-          await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR, maxZoom);
+          await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR);
         }
       }
   }
@@ -57,16 +56,16 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  static async saveImagePathInRedis(year: number, month: number, day: number, waveArray: string[]): Promise<void> {
+  static async saveImagePathInRedis(year: number, month: number, day: number, zoom: number, waveArray: string[]): Promise<void> {
     try {
 
 
       let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, day, waveArray);
 
-      await RedisHelper.getInstance().saveImagesPathInRedis(imagesInfos);
+      await RedisHelper.getInstance().saveImagesPathInRedis(imagesInfos, zoom);
 
       // Write file path in file for emergency
-      let fileSavedAllImagePath: string = OUT_PUT_TILES_DIR + "allImagePaths.txt";
+      let fileSavedAllImagePath: string = OUT_PUT_TILES_DIR + `allImagePaths_${year}_${month}_${day}_${zoom}.txt`;
 
       const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllImagePath);
 
@@ -78,7 +77,7 @@ export class TiffTilerService {
 
 
 
-      fs.unlinkSync(fileSavedAllImagePath);
+      // fs.unlinkSync(fileSavedAllImagePath);
 
 
       // async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
@@ -99,12 +98,12 @@ export class TiffTilerService {
     }
   }
 
-  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: WaveFile, outputTilesDir: string, inputTilesDir: string, maxZoom: number): Promise<void> {
+  static async usePythonCommandLineToSplitJpgToTiff(tiffImagePath: {filePath: string, waveType: string, maxZoom: string}, outputTilesDir: string, inputTilesDir: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let pythonCodePath: string = path.resolve(`${__dirname}/../../pythonscript/tifftiler.py`);
 
       // 分解图片路径，获取年月日，作为输出路径
-
+      let maxZoom: string = tiffImagePath.maxZoom;
       let filePath: string = tiffImagePath.filePath;
       let tempDir: string = "/tmp";
       console.log("start split...");
