@@ -6,7 +6,6 @@ import * as readline from "readline";
 import * as path from "path";
 
 import * as cron from "cron";
-import * as PythonShell from "python-shell";
 import * as async from "async";
 import * as child_process from "child_process";
 
@@ -30,7 +29,24 @@ const IN_PUT_TILES_DIR: string = config["sentinelImage"]["inputTilesDir"];
  * @export
  * @class TiffTilerService
  */
+
 export class TiffTilerService {
+
+  static async startTransformImageToTiff(maxZoom: number): Promise<void> {
+      while (1) {
+        let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
+        console.log("read");
+        console.log(imageInfoInString);
+        if (imageInfoInString === null) {
+          console.log("all image split finish");
+          break;
+        } else {
+          let imageInfo: any = JSON.parse(imageInfoInString);
+          console.log(imageInfo);
+          await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR, maxZoom);
+        }
+      }
+  }
 
   /**
    * Main service functon
@@ -41,19 +57,16 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  static async startTransformImageToTiff(year: number, month: number, day: number, maxZoom: number, waveArray: string[]): Promise<void> {
+  static async saveImagePathInRedis(year: number, month: number, day: number, waveArray: string[]): Promise<void> {
     try {
-      const config: any = require("../../config/project.config.json");
-      const outputTilesDir: string = config["sentinelImage"]["outputTilesDir"];
-      const inputTilesDir: string = config["sentinelImage"]["inputTilesDir"];
-      const localTempDir: string = outputTilesDir + "temp/";
 
-      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, day, waveArray, maxZoom);
+
+      let imagesInfos: WaveFile[] = await TiffTilerService.getSplitedImagesPaths(year, month, day, waveArray);
 
       await RedisHelper.getInstance().saveImagesPathInRedis(imagesInfos);
 
       // Write file path in file for emergency
-      let fileSavedAllImagePath: string = outputTilesDir + "allImagePaths.txt";
+      let fileSavedAllImagePath: string = OUT_PUT_TILES_DIR + "allImagePaths.txt";
 
       const stream: fs.WriteStream = fs.createWriteStream(fileSavedAllImagePath);
 
@@ -63,19 +76,9 @@ export class TiffTilerService {
       console.log("all images end");
       stream.end();
 
-      while (1) {
-        let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
-        console.log("read");
-        console.log(imageInfoInString);
-        if (imageInfoInString === null) {
-          break;
-        } else {
-          let imageInfo: any = JSON.parse(imageInfoInString);
-          console.log(imageInfo);
-          await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, outputTilesDir, inputTilesDir, maxZoom);
-          fs.unlinkSync(fileSavedAllImagePath);
-        }
-      }
+
+
+      fs.unlinkSync(fileSavedAllImagePath);
 
 
       // async.eachLimit(imagesInfos, 3, (imageInfo, done) => {
@@ -156,7 +159,7 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  static async getSplitedImagesPaths(year: number, month: number, day: number, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
+  static async getSplitedImagesPaths(year: number, month: number, day: number, waveArray: string[]): Promise<WaveFile[]> {
     // let allSquareFoldersPathInS3: string[] = await TiffTilerService.getAllSquareFoldersPathInS3ForGdal_();
 
 
@@ -171,11 +174,11 @@ export class TiffTilerService {
     //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UP/",
     //                                                 "/mountdata/s3-sentinel-2/tiles/48/T/UQ/"];
     console.log(allChinaSquareFoldersPathInS3);
-    let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allChinaSquareFoldersPathInS3, year, month, day, waveArray, maxZoom);
+    let allSpecifyImagesPath: WaveFile[] =  await TiffTilerService.getAllSpecifyImagesPath_(allChinaSquareFoldersPathInS3, year, month, day, waveArray);
     return allSpecifyImagesPath;
   }
 
-  static async getImageFiles_(rootDir: string, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
+  static async getImageFiles_(rootDir: string, waveArray: string[]): Promise<WaveFile[]> {
     return new Promise<WaveFile[]>((resolve, reject) => {
       let allImages: WaveFile[] = [];
       fs.readdir(rootDir, (err: NodeJS.ErrnoException, fileNames: string[]) => {
@@ -397,7 +400,7 @@ export class TiffTilerService {
    *
    * @memberOf TiffTilerService
    */
-  private static async getAllSpecifyImagesPath_(squareFolderPathArray: string[], year: number, month: number, day: number, waveArray: string[], maxZoom: number): Promise<WaveFile[]> {
+  private static async getAllSpecifyImagesPath_(squareFolderPathArray: string[], year: number, month: number, day: number, waveArray: string[]): Promise<WaveFile[]> {
     return new Promise<WaveFile[]>((resolve, reject) => {
       let imagePathArray: WaveFile[] = [];
 
@@ -407,7 +410,7 @@ export class TiffTilerService {
             console.log(folderPath);
           if (stats && stats.isDirectory()) {
               console.log("exist, done");
-            TiffTilerService.getImageFiles_(folderPath, waveArray, maxZoom).then((data: any) => {
+            TiffTilerService.getImageFiles_(folderPath, waveArray).then((data: any) => {
               imagePathArray.push(...data);
               done();
             });

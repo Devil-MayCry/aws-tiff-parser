@@ -3,8 +3,6 @@
 
 import * as redis from "redis";
 
-import * as _ from "lodash";
-
 interface WaveFile {
   filePath: string;
   waveType: string;

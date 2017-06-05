@@ -27,6 +27,7 @@
   "devDependencies": {
     "@types/cron": "^1.2.0",
     "@types/pg": "^6.1.33",
+    "@types/redis": "^0.12.32",
     "child_process": "^1.0.2",
     "gulp": "^3.9.1",
     "gulp-rename": "^1.2.2",
