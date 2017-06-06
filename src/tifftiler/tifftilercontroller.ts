@@ -20,7 +20,11 @@ export class TiffTilerController extends BaseController {
 
       const bandArray: string [] = req.body["bands"].substring(0, req.body["bands"].length).split(",");
 
-      await TiffTilerService.saveImagePathInRedis(year, month, day, zoom, bandArray);
+      // await TiffTilerService.saveImagePathInRedis(year, month, day, zoom, bandArray);
+
+      res.json(new SuccessResponse({
+        stats: "success"
+      }));
     } catch (err) {
       next(err);
     }

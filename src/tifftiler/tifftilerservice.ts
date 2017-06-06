@@ -116,7 +116,7 @@ export class TiffTilerService {
       let tempDir: string = "/tmp";
       console.log("start split...");
 
-      console.log(filePath);
+      console.log(tiffImagePath);
 
       let dirPath: string = filePath.replace(inputTilesDir, "");
       let dirArray: string[] = dirPath.split("/");
@@ -131,7 +131,7 @@ export class TiffTilerService {
             if (stats) {
               const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, tempFilePath, outputDir], (error, stdout, stderr) => {
                 if (error) {
-                  console.log("error");
+                  console.log(err.toString());
                   resolve();
                 } else {
                   console.log("split..end.");
@@ -143,7 +143,7 @@ export class TiffTilerService {
               fs.mkdir(outputDir, () => {
                 const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, tempFilePath, outputDir], (error, stdout, stderr) => {
                   if (error) {
-                    console.log("error");
+                    console.log(err.toString());
                     resolve();
                   } else {
                     console.log("split..end.");
