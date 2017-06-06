@@ -14,4 +14,6 @@ app.use("/api/beta", betaRouter);
 
 TiffTilerService.startTransformImageToTiff();
 
+app.listen(3000);
+
 console.log("Server start");
