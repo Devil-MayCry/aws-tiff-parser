@@ -37,6 +37,7 @@ export class TiffTilerService {
         let redisInstance: RedisHelper = RedisHelper.getInstance();
         let imageInfoInString: string = await redisInstance.getImageSplitTask();
         if (imageInfoInString === null) {
+          console.log("no task");
           await TiffTilerService.sleep();
         } else {
           let imageInfo: any = JSON.parse(imageInfoInString);
@@ -51,6 +52,7 @@ export class TiffTilerService {
     return new Promise<void>((resolve, reject) => {
       setInterval( () => {
         RedisHelper.getInstance().keepConnectionAlive();
+        resolve();
       }, 3000);
     });
   }
