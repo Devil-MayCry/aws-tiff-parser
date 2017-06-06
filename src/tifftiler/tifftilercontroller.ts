@@ -18,7 +18,7 @@ export class TiffTilerController extends BaseController {
 
       const zoom: number = validator.toNumber(req.body["maxZoom"], "invalid maxZoom");
 
-      const bandArray: string [] = req.body["bands"].substring(0, req.query["bands"].length).split(",");
+      const bandArray: string [] = req.body["bands"].substring(0, req.body["bands"].length).split(",");
 
       await TiffTilerService.saveImagePathInRedis(year, month, day, zoom, bandArray);
     } catch (err) {
