@@ -133,7 +133,7 @@ export class TiffTilerService {
             if (stats) {
               const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, tempFilePath, outputDir], (error, stdout, stderr) => {
                 if (error) {
-                  console.log(err.toString());
+                  console.log(error.toString());
                   resolve();
                 } else {
                   console.log("split..end.");
@@ -145,7 +145,7 @@ export class TiffTilerService {
               fs.mkdir(outputDir, () => {
                 const process: child_process.ChildProcess = child_process.execFile("/root/miniconda3/bin/python", [pythonCodePath, "-z", `0-${maxZoom}`, tempFilePath, outputDir], (error, stdout, stderr) => {
                   if (error) {
-                    console.log(err.toString());
+                    console.log(error.toString());
                     resolve();
                   } else {
                     console.log("split..end.");

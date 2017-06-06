@@ -26,12 +26,10 @@ export class TiffTilerController extends BaseController {
       }
 
 
-      await TiffTilerService.saveImagePathInRedis(year, month, day, zoom, bandArray);
-
-
+      TiffTilerService.saveImagePathInRedis(year, month, day, zoom, bandArray);
 
       res.json(new SuccessResponse({
-        stats: "success"
+        stats: "start produce"
       }));
     } catch (err) {
       next(err);
