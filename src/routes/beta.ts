@@ -40,7 +40,7 @@ betaRouter.use(haltOnTimedout);
 // image-browser-awa beta api  (before request)
 // -------------------------------------------------------------------------
 
-betaRouter.post("/till_tiler_task", TiffTilerController.addImageSplitTask);
+betaRouter.post("/tiff_tiler_task", TiffTilerController.addImageSplitTask);
 
 // -------------------------------------------------------------------------
 // 404

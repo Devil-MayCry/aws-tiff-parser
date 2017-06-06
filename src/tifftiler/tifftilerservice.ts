@@ -34,7 +34,8 @@ export class TiffTilerService {
 
   static async startTransformImageToTiff(): Promise<void> {
       while (1) {
-        let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
+        let redisInstance: RedisHelper = RedisHelper.getInstance();
+        let imageInfoInString: string = await redisInstance.getImageSplitTask();
         if (imageInfoInString === null) {
           await TiffTilerService.sleep();
         } else {
@@ -48,8 +49,8 @@ export class TiffTilerService {
   // When task Queue is empty, check list 3 per second
   private static sleep(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      setTimeout( () => {
-        resolve();
+      setInterval( () => {
+        RedisHelper.getInstance().keepConnectionAlive();
       }, 3000);
     });
   }

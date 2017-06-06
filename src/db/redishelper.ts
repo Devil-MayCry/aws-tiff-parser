@@ -23,6 +23,10 @@ export class RedisHelper {
     console.log(`RedisHelper connects to ${this.redisHost}`);
   }
 
+  keepConnectionAlive(): void {
+    this.redisClient_.ping();
+  }
+
   static getInstance(): RedisHelper {
     if (!RedisHelper.instance_) {
       RedisHelper.instance_ = new RedisHelper();
