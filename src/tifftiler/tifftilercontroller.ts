@@ -12,13 +12,13 @@ export class TiffTilerController extends BaseController {
     try {
       let validator: Validator = new Validator();
 
-      const year: number = validator.toNumber(req.params["year"], "invalid year");
-      const month: number = validator.toNumber(req.params["month"], "invalid month");
-      const day: number = validator.toNumber(req.params["day"], "invalid day");
+      const year: number = validator.toNumber(req.body["year"], "invalid year");
+      const month: number = validator.toNumber(req.body["month"], "invalid month");
+      const day: number = validator.toNumber(req.body["day"], "invalid day");
 
-      const zoom: number = validator.toNumber(req.params["maxZoom"], "invalid maxZoom");
+      const zoom: number = validator.toNumber(req.body["maxZoom"], "invalid maxZoom");
 
-      const bandArray: string [] = req.query["bands"].substring(0, req.query["bands"].length).split(",");
+      const bandArray: string [] = req.body["bands"].substring(0, req.query["bands"].length).split(",");
 
       await TiffTilerService.saveImagePathInRedis(year, month, day, zoom, bandArray);
     } catch (err) {
