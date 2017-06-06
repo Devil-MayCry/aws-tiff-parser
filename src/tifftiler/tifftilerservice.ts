@@ -35,7 +35,6 @@ export class TiffTilerService {
   static async startTransformImageToTiff(): Promise<void> {
       while (1) {
         let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
-        console.log(imageInfoInString);
         if (imageInfoInString === null) {
           await TiffTilerService.sleep();
         } else {
