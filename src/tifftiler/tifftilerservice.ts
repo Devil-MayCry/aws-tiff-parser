@@ -37,14 +37,22 @@ export class TiffTilerService {
         let imageInfoInString: string = await RedisHelper.getInstance().getImageSplitTask();
         console.log(imageInfoInString);
         if (imageInfoInString === null) {
-          console.log("all image split finish, hold on for new task");
-          setTimeout(2000);
+          await TiffTilerService.sleep();
         } else {
           let imageInfo: any = JSON.parse(imageInfoInString);
-          console.log(imageInfo);
           await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR);
         }
       }
+  }
+
+
+  // When task Queue is empty, check list 3 per second
+  private static sleep(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      setTimeout( () => {
+        resolve();
+      }, 3000);
+    });
   }
 
   /**
