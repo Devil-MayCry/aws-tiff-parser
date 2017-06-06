@@ -40,7 +40,7 @@ export class TiffTilerService {
           console.log("no task");
           await TiffTilerService.sleep();
         } else {
-          let imageInfo: any = JSON.parse(imageInfoInString);
+          let imageInfo: {filePath: string, waveType: string, maxZoom: string} = JSON.parse(imageInfoInString);
           await TiffTilerService.usePythonCommandLineToSplitJpgToTiff(imageInfo, OUT_PUT_TILES_DIR, IN_PUT_TILES_DIR);
         }
       }

@@ -46,7 +46,7 @@ export class RedisHelper {
     return new Promise<void>((resolve, reject) => {
       let multi = this.redisClient_.multi();
       for (let imageInfo of iamgesInfos) {
-          let imageInfoInString: string = `{"filePath": "${imageInfo.filePath}", "waveType":  "${imageInfo.waveType}", "zoom": "${zoom}"}`;
+          let imageInfoInString: string = `{"filePath": "${imageInfo.filePath}", "waveType":  "${imageInfo.waveType}", "maxZoom": "${zoom}"}`;
           console.log(imageInfoInString);
           multi.rpush("images_path", imageInfoInString);
           console.log("save");
