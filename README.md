@@ -50,5 +50,7 @@ docker pull redis
 
 启动时将工程挂载进镜像部署
 
-docker run -it -p 3000:3000 --link redis:redis  -v /home/huteng/www/gdal-tiff-sentinel-aws/:/usr/local/gdal-tiff-sentinel-aws/ -v /mountdata/s3-gagobucket/tiles:/mountdata/s3-gagobucket/tiles -v /mountdata/s3-sentinel-2/tiles/:/mountdata/s3-sentinel-2/tiles/ docker.gagogroup.cn:5000/gdal:latest sh /usr/local/gdal-tiff-sentinel-aws/bin/start_from_docker.sh
+可以运行bin/start_docker_service.sh脚本
+
+docker run -it -p 3000:3000 --link redis:redis  -v /home/huteng/www/gdal-tiff-sentinel-aws/:/usr/local/gdal-tiff-sentinel-aws/ -v /mountdata/s3-gagobucket/tiles:/mountdata/s3-gagobucket/tiles -v /mountdata/s3-sentinel-2/tiles/:/mountdata/s3-sentinel-2/tiles/ huteng/cent7:node sh /usr/local/gdal-tiff-sentinel-aws/bin/start_from_docker.sh
 
