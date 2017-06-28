@@ -16,6 +16,10 @@
 
 1. 安装 node.js 6.11.0 以及 npm，Typescript
 2. 安装redis
+3. 安装gdal
+
+或者用打包好环境的docker镜像
+docker pull huteng/cent7:gdal 
 
 # 配置环境
 
@@ -38,7 +42,7 @@
 镜像采用了基于centos7，预先安装了nodejs, npm, pm2 等
 
 可以通过
-docker pull huteng/cent7:node 
+docker pull huteng/cent7:gdal 
 获取镜像
 
 redis也采用了镜像方式启动
