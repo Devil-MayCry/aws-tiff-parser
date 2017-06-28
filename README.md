@@ -20,7 +20,7 @@
 # 配置环境
 
 ## NODE_ENV
-`NODE_ENV` 在本地需要设置为`development`，在生产服务器(api.gagogroup.cn)为`production`
+`NODE_ENV` 在本地需要设置为`development`，在生产服务器为`production`
 
 # LINT
 
